@@ -14,14 +14,29 @@ export interface DefaultOptons {
     historyTracker: boolean,
     hashTracker: boolean,
     domTracker: boolean,
+    requestTracker: boolean,
     sdkVersion: string | number,
     extra: Record<string, any> | undefined,
     jsError:boolean
 }
 //Partial代表将属性变为可选属性
 export interface Optins extends Partial<DefaultOptons>{
-    requestUrl: string
+    requestUrl: string,
+    FPTracker?: boolean 
 }
 export enum TrackerConfig {
     version = '1.0.0'
 }
+
+
+export interface requests {
+        "url": string, //url
+        "event": string, //最终请求的得到的类型 load/error/abort
+        "type": string, //请求方式
+        "method": string, //事件类型
+        "status": string, //状态码
+        "duration": string, //持续时间
+        "response": any, //响应内容
+        "params":  any //参数
+        "success": boolean //是否成功
+      }

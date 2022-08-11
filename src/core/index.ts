@@ -1,7 +1,7 @@
 import  type {DefaultOptons,Optins} from "../type/index"
 import {TrackerConfig} from '../type/index'
 import { createHistoryEvent } from "../utils/pv"
-
+import FPTracker from "../utils/FP"
 
 export default class Tracker{
     public  data: Optins
@@ -9,6 +9,7 @@ export default class Tracker{
         this.data = Object.assign(this.initDef(),options)
         this.installTracker()
     }
+    //初始化函数
     private initDef() : DefaultOptons{
         window.history['pushState'] = createHistoryEvent('pushState')
         window.history['replaceState'] = createHistoryEvent('replaceState')
@@ -20,6 +21,7 @@ export default class Tracker{
             jsError:false
 }
 }
+   
     //targetKey自定义 例如history-pv
     private captureEvents <T>(mouseEventList: string[], targetKey: string, data?:T){
         mouseEventList.forEach(item =>{
@@ -50,13 +52,24 @@ export default class Tracker{
     public sendReport<T>(data: T){
         this.reportTracker(data)
     }
+
+
     private installTracker(){
+        //history模式监控
         if(this.data.historyTracker){
             this.captureEvents(['pushState','replaceState','popstate'],'history-pv')
         }
+        //hash模式
         if(this.data.hashTracker){
             this.captureEvents(['hashchange'],'hash-pv')
         }
+        //Fp监控
+        if(this.data.FPTracker){
+            FPTracker()
+            
         }
+        }
+
+
     }
 

@@ -16,7 +16,7 @@
         return function () {
             const res = origin.apply(this, arguments);
             const e = new Event(type);
-            /* Event创建自定必事件
+            /* Event创建自定义事件
             dispatchEvent派发事件
             addEventListener监听事件
             emoveEventListener删除事件
@@ -27,11 +27,25 @@
         };
     };
 
+    function FPTracker() {
+        const entryHandler = (list) => {
+            for (const entry of list.getEntries()) {
+                if (entry.name === 'first-paint') {
+                    observer.disconnect();
+                    console.log('FPtime', entry.startTime);
+                }
+            }
+        };
+        const observer = new PerformanceObserver(entryHandler);
+        observer.observe({ type: 'paint', buffered: true });
+    }
+
     class Tracker {
         constructor(options) {
             this.data = Object.assign(this.initDef(), options);
             this.installTracker();
         }
+        //初始化函数
         initDef() {
             window.history['pushState'] = createHistoryEvent('pushState');
             window.history['replaceState'] = createHistoryEvent('replaceState');
@@ -56,7 +70,7 @@
         setUserId(uuid) {
             this.data.uuid = uuid;
         }
-        //监听接口
+        //上报请求
         reportTracker(data) {
             const params = Object.assign(this.data, data, { time: new Date().getTime() });
             let headers = {
@@ -71,11 +85,17 @@
             this.reportTracker(data);
         }
         installTracker() {
+            //history模式监控
             if (this.data.historyTracker) {
                 this.captureEvents(['pushState', 'replaceState', 'popstate'], 'history-pv');
             }
+            //hash模式
             if (this.data.hashTracker) {
                 this.captureEvents(['hashchange'], 'hash-pv');
+            }
+            //Fp监控
+            if (this.data.FPTracker) {
+                FPTracker();
             }
         }
     }
