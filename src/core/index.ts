@@ -2,9 +2,11 @@ import  type {DefaultOptons,Optins} from "../type/index"
 import {TrackerConfig} from '../type/index'
 import { createHistoryEvent } from "../utils/pv"
 import FPTracker from "../utils/FP"
+import DOMTracker from "../utils/DomReady"
 
 export default class Tracker{
     public  data: Optins
+    MouseEventList: string[] = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup', 'mouseenter', 'mouseout', 'mouseover']
     constructor(options: Optins) {
         this.data = Object.assign(this.initDef(),options)
         this.installTracker()
@@ -53,8 +55,56 @@ export default class Tracker{
         this.reportTracker(data)
     }
 
-
+    //dom监听
+    private targerKeyReport(){
+     this.MouseEventList.forEach(ev=>{
+        window.addEventListener(ev,(e)=>{
+            const target = e.target as HTMLElement
+            const targetKey = target.getAttribute('target-key')
+            if(targetKey){
+                console.log({
+                    event:ev,
+                    target:targetKey
+                },'监听到了')
+                this.reportTracker({
+                    event:ev,
+                    target:targetKey
+                })
+            }
+        })
+    })
+    }
+    //js错误
+    private errorEvent(){
+        window.addEventListener('error',(event)=>{
+            this.reportTracker({
+                event:'jserror',
+                targetkey:'message',
+                message:event.message
+            })
+        })
+    }
+    //promise错误
+    private promistReject(){
+        window.addEventListener('unhandledrejection',(event)=>{
+            //通过catch捕获错误
+            event.promise.catch(error =>{
+                this.reportTracker({
+                    event:'promise',
+                    targetkey:'reject',
+                    message:error
+                })
+            })
+        })
+    }
+    private jsError(){
+        this.errorEvent()
+        this.promistReject()
+    }
     private installTracker(){
+        if(this.data.DOMTracker){
+            DOMTracker()
+        }
         //history模式监控
         if(this.data.historyTracker){
             this.captureEvents(['pushState','replaceState','popstate'],'history-pv')
@@ -65,9 +115,16 @@ export default class Tracker{
         }
         //Fp监控
         if(this.data.FPTracker){
-            FPTracker()
-            
+            FPTracker(this.data.FCPTracker)
         }
+        //dom监听
+        if(this.data.DOMTracker){
+            this.targerKeyReport()
+        }
+        if(this.data.jsError){
+            this.jsError()
+        }
+
         }
 
 

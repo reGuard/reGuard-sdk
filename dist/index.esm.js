@@ -21,12 +21,18 @@ const createHistoryEvent = (type) => {
     };
 };
 
-function FPTracker() {
+function FPTracker(FCP) {
     const entryHandler = (list) => {
         for (const entry of list.getEntries()) {
             if (entry.name === 'first-paint') {
                 observer.disconnect();
                 console.log('FPtime', entry.startTime);
+            }
+            if (FCP) {
+                if (entry.name === 'first-contentful-paint') {
+                    observer.disconnect();
+                    console.log('FCPtime', entry.startTime);
+                }
             }
         }
     };
@@ -34,8 +40,15 @@ function FPTracker() {
     observer.observe({ type: 'paint', buffered: true });
 }
 
+function DOMTracker() {
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOMReady: True', new Date());
+    });
+}
+
 class Tracker {
     constructor(options) {
+        this.MouseEventList = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup', 'mouseenter', 'mouseout', 'mouseover'];
         this.data = Object.assign(this.initDef(), options);
         this.installTracker();
     }
@@ -78,7 +91,57 @@ class Tracker {
     sendReport(data) {
         this.reportTracker(data);
     }
+    //dom监听
+    targerKeyReport() {
+        this.MouseEventList.forEach(ev => {
+            window.addEventListener(ev, (e) => {
+                const target = e.target;
+                const targetKey = target.getAttribute('target-key');
+                if (targetKey) {
+                    console.log({
+                        event: ev,
+                        target: targetKey
+                    }, '监听到了');
+                    this.reportTracker({
+                        event: ev,
+                        target: targetKey
+                    });
+                }
+            });
+        });
+    }
+    //js错误
+    errorEvent() {
+        window.addEventListener('error', (event) => {
+            console.log(2);
+            this.reportTracker({
+                event: 'jserror',
+                targetkey: 'message',
+                message: event.message
+            });
+        });
+    }
+    //promise错误
+    promistReject() {
+        window.addEventListener('unhandledrejection', (event) => {
+            //通过catch捕获错误
+            event.promise.catch(error => {
+                this.reportTracker({
+                    event: 'promise',
+                    targetkey: 'message',
+                    message: error
+                });
+            });
+        });
+    }
+    jsError() {
+        this.errorEvent();
+        this.promistReject();
+    }
     installTracker() {
+        if (this.data.DOMTracker) {
+            DOMTracker();
+        }
         //history模式监控
         if (this.data.historyTracker) {
             this.captureEvents(['pushState', 'replaceState', 'popstate'], 'history-pv');
@@ -89,7 +152,14 @@ class Tracker {
         }
         //Fp监控
         if (this.data.FPTracker) {
-            FPTracker();
+            FPTracker(this.data.FCPTracker);
+        }
+        //dom监听
+        if (this.data.DOMTracker) {
+            this.targerKeyReport();
+        }
+        if (this.data.jsError) {
+            this.jsError();
         }
     }
 }

@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <style>
+        .title-body{
+            width: 100%;
+            height: 100%;
+            background-color: blueviolet;
+        }
+    </style>
     <script src="./dist/index.js"></script>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,14 +15,25 @@
     <title>Document</title>
 </head>
 <body>
-    
+    <div>
+        <button target-key="btn">我添加了</button>
+        <button>我没添加</button>
+        <h2 class="title-body">我是小黄鸭</h2>
+    </div>
 
     <script>
+      /*  const vue = new Vue({
+         
+        }) */
+       
      new Tracker(
             {
                 historyTracker: true,
                 requestUrl:'http://localhost:9000/tracker',
-                FPTracker: true
+                FPTracker: true,
+                FCPTracker:true,
+                DOMTracker:true,
+                jsError:true,
             }
         )
         </script>
