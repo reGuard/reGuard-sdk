@@ -52,6 +52,57 @@
         });
     }
 
+<<<<<<< HEAD
+    //接口异常采集
+    function requestCatch(type1, type2) {
+        let oldopen = XMLHttpRequest.prototype[type1];
+        let oldosend = XMLHttpRequest.prototype[type2];
+        let logData = {
+            method: '',
+            url: '',
+        };
+        XMLHttpRequest.prototype.open = function (method, url, async) {
+            logData = {
+                method,
+                url,
+            };
+            return oldopen.apply(this, arguments);
+        };
+        let startTime;
+        XMLHttpRequest.prototype.send = function (body) {
+            if (logData) {
+                //发送时候记录时间
+                startTime = Date.now();
+                const handler = (type) => (event) => {
+                    let duration = Date.now() - startTime;
+                    let status = this.status;
+                    let statusText = this.statusText;
+                    let requestInfo = {
+                        type: 'xhr',
+                        eventType: event.type,
+                        pathName: logData.url,
+                        status: status + '-' + statusText,
+                        duration,
+                        response: this.response ? JSON.stringify(this.response) : '',
+                        params: body || ''
+                    };
+                    reportTracker(requestInfo);
+                };
+                this.addEventListener('load', handler(), false);
+                this.addEventListener('error', handler(), false);
+                this.addEventListener('abort', handler(), false);
+            }
+            oldosend.apply(this, arguments);
+        };
+    }
+    function reportTracker(params) {
+        let headers = {
+            type: 'application/x-www-form-urlencoded'
+        };
+        //封装blob
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon('http://localhost:9000/tracker', blob);
+=======
     function injectHandleJsError() {
         window.addEventListener("error", function (event) {
             // 监听语法、引用等js错误
@@ -104,6 +155,7 @@
                 position: (event.lineno || 0) + ":" + (event.colno || 0), // 异常位置
             });
         }, true);
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
     }
 
     class Tracker {
@@ -129,7 +181,11 @@
         captureEvents(mouseEventList, targetKey, data) {
             mouseEventList.forEach((item) => {
                 window.addEventListener(item, () => {
+<<<<<<< HEAD
+                    console.log('监听到了pv');
+=======
                     console.log("监听到了");
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
                     this.reportTracker({ item, targetKey, data });
                 });
             });
@@ -138,6 +194,7 @@
         setUserId(uuid) {
             this.data.uuid = uuid;
         }
+        //请求异常
         //上报请求
         reportTracker(data) {
             const params = Object.assign(this.data, data, { time: new Date().getTime() });
@@ -171,6 +228,33 @@
                 });
             });
         }
+<<<<<<< HEAD
+        //js错误
+        errorEvent() {
+            window.addEventListener('error', (event) => {
+                console.log(event);
+                this.reportTracker({
+                    event: 'jserror',
+                    targetkey: 'message',
+                    message: event.message
+                });
+            });
+        }
+        //promise错误
+        promistReject() {
+            window.addEventListener('unhandledrejection', (event) => {
+                //通过catch捕获错误
+                event.promise.catch(error => {
+                    this.reportTracker({
+                        event: 'promise',
+                        targetkey: 'reject',
+                        message: error
+                    });
+                });
+            });
+        }
+=======
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
         jsError() {
             injectHandleJsError();
         }
@@ -200,8 +284,14 @@
             if (this.data.jsError) {
                 this.jsError();
             }
+<<<<<<< HEAD
+            if (this.data.requestTracker) {
+                requestCatch('open', 'send');
+                //上报
+=======
             if (this.data.resourceError) {
                 this.resourceError();
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
             }
         }
     }

@@ -21,11 +21,20 @@ export interface DefaultOptons {
 }
 
 //Partial代表将属性变为可选属性
+<<<<<<< HEAD
+export interface Optins extends Partial<DefaultOptons>{
+    requestUrl: string,
+    FPTracker?: boolean,
+    FCPTracker?: boolean,
+    DOMTracker?: boolean
+    requestTracker?: boolean
+=======
 export interface Optins extends Partial<DefaultOptons> {
     requestUrl: string;
     FPTracker?: boolean;
     FCPTracker?: boolean;
     DOMTracker?: boolean;
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
 }
 
 export enum TrackerConfig {
