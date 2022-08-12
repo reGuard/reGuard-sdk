@@ -1,18 +1,29 @@
+<<<<<<< HEAD
 import  type {DefaultOptons,Optins} from "../type/index"
 import {TrackerConfig} from '../type/index'
 import { createHistoryEvent } from "../utils/pv"
 import FPTracker from "../utils/FP"
 import DOMTracker from "../utils/DomReady"
 import requestCatch from '../utils/requestCatch'
+=======
+import type { DefaultOptons, Optins } from "../type/index";
+import { TrackerConfig } from "../type/index";
+import { createHistoryEvent } from "../utils/pv";
+import FPTracker from "../utils/FP";
+import DOMTracker from "../utils/DomReady";
+import injectHandleJsError from "../utils/handleError/jsError";
+import injectHandleResourceError from "../utils/handleError/resourceError";
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
 
-export default class Tracker{
-    public  data: Optins
-    MouseEventList: string[] = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup', 'mouseenter', 'mouseout', 'mouseover']
+export default class Tracker {
+    public data: Optins;
+    MouseEventList: string[] = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
     constructor(options: Optins) {
-        this.data = Object.assign(this.initDef(),options)
-        this.installTracker()
+        this.data = Object.assign(this.initDef(), options);
+        this.installTracker();
     }
     //初始化函数
+<<<<<<< HEAD
     private initDef() : DefaultOptons{
         window.history['pushState'] = createHistoryEvent('pushState')
         window.history['replaceState'] = createHistoryEvent('replaceState')
@@ -33,48 +44,73 @@ export default class Tracker{
                 this.reportTracker({item,targetKey,data})
             })
         })
+=======
+    private initDef(): DefaultOptons {
+        window.history["pushState"] = createHistoryEvent("pushState");
+        window.history["replaceState"] = createHistoryEvent("replaceState");
+        return <DefaultOptons>{
+            sdkVersion: TrackerConfig.version,
+            historyTracker: false,
+            hashTracker: false,
+            domTracker: false,
+            jsError: false,
+            resourceError: false,
+        };
+    }
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
 
+    //targetKey自定义 例如history-pv
+    private captureEvents<T>(mouseEventList: string[], targetKey: string, data?: T) {
+        mouseEventList.forEach((item) => {
+            window.addEventListener(item, () => {
+                console.log("监听到了");
+                this.reportTracker({ item, targetKey, data });
+            });
+        });
     }
     //设置用户id
-    public setUserId<T extends DefaultOptons['uuid'] >(uuid: T){
-        this.data.uuid = uuid
+    public setUserId<T extends DefaultOptons["uuid"]>(uuid: T) {
+        this.data.uuid = uuid;
     }
     //请求异常
     //上报请求
-    private reportTracker<T>(data: T){
-        const params = Object.assign(this.data,data,{time:new Date().getTime()})
+    private reportTracker<T>(data: T) {
+        const params = Object.assign(this.data, data, { time: new Date().getTime() });
         let headers = {
-            type: 'application/x-www-form-urlencoded'
-        }
+            type: "application/x-www-form-urlencoded",
+        };
         //封装blob
-        let blob  = new Blob([JSON.stringify(params)],headers)
-        navigator.sendBeacon(this.data.requestUrl,blob)
-        
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon(this.data.requestUrl, blob);
     }
     //手动上报
-    public sendReport<T>(data: T){
-        this.reportTracker(data)
+    public sendReport<T>(data: T) {
+        this.reportTracker(data);
     }
 
     //dom监听
-    private targerKeyReport(){
-     this.MouseEventList.forEach(ev=>{
-        window.addEventListener(ev,(e)=>{
-            const target = e.target as HTMLElement
-            const targetKey = target.getAttribute('target-key')
-            if(targetKey){
-                console.log({
-                    event:ev,
-                    target:targetKey
-                },'监听到了')
-                this.reportTracker({
-                    event:ev,
-                    target:targetKey
-                })
-            }
-        })
-    })
+    private targerKeyReport() {
+        this.MouseEventList.forEach((ev) => {
+            window.addEventListener(ev, (e) => {
+                const target = e.target as HTMLElement;
+                const targetKey = target.getAttribute("target-key");
+                if (targetKey) {
+                    console.log(
+                        {
+                            event: ev,
+                            target: targetKey,
+                        },
+                        "监听到了"
+                    );
+                    this.reportTracker({
+                        event: ev,
+                        target: targetKey,
+                    });
+                }
+            });
+        });
     }
+<<<<<<< HEAD
     //js错误
     private errorEvent(){
         window.addEventListener('error',(event)=>{
@@ -85,54 +121,47 @@ export default class Tracker{
                 message:event.message
             })
         })
+=======
+    private jsError() {
+        injectHandleJsError();
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
     }
-    //promise错误
-    private promistReject(){
-        window.addEventListener('unhandledrejection',(event)=>{
-            //通过catch捕获错误
-            event.promise.catch(error =>{
-                this.reportTracker({
-                    event:'promise',
-                    targetkey:'reject',
-                    message:error
-                })
-            })
-        })
+    private resourceError() {
+        injectHandleResourceError();
     }
-    private jsError(){
-        this.errorEvent()
-        this.promistReject()
-    }
-    private installTracker(){
-        if(this.data.DOMTracker){
-            DOMTracker()
+    private installTracker() {
+        if (this.data.DOMTracker) {
+            DOMTracker();
         }
         //history模式监控
-        if(this.data.historyTracker){
-            this.captureEvents(['pushState','replaceState','popstate'],'history-pv')
+        if (this.data.historyTracker) {
+            this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv");
         }
         //hash模式
-        if(this.data.hashTracker){
-            this.captureEvents(['hashchange'],'hash-pv')
+        if (this.data.hashTracker) {
+            this.captureEvents(["hashchange"], "hash-pv");
         }
         //Fp监控
-        if(this.data.FPTracker){
-            FPTracker(this.data.FCPTracker)
+        if (this.data.FPTracker) {
+            FPTracker(this.data.FCPTracker);
         }
         //dom监听
-        if(this.data.DOMTracker){
-            this.targerKeyReport()
+        if (this.data.DOMTracker) {
+            this.targerKeyReport();
         }
-        if(this.data.jsError){
-            this.jsError()
+        if (this.data.jsError) {
+            this.jsError();
         }
+<<<<<<< HEAD
         if(this.data.requestTracker){
             requestCatch('open','send')
            //上报
         }
 
+=======
+        if (this.data.resourceError) {
+            this.resourceError();
+>>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
         }
-
-
     }
-
+}
