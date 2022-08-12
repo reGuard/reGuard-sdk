@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <style>
-        .title-body{
-            width: 100%;
-            height: 100%;
-            background-color: blueviolet;
-        }
-    </style>
-    <script src="./dist/index.js"></script>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <div>
-        <button target-key="btn">我添加了</button>
-        <button>我没添加</button>
-        <h2 class="title-body">我是小黄鸭</h2>
-    </div>
+    <head>
+        <style>
+            .title-body {
+                width: 100%;
+                height: 100%;
+                background-color: blueviolet;
+            }
+        </style>
+        <script src="./dist/index.js"></script>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <div>
+            <button target-key="btn">我添加了</button>
+            <button>我没添加</button>
+            <h2 class="title-body">我是小黄鸭</h2>
+            <img src="../err.jpg" alt="" />
+        </div>
 
-    <script>
-      /*  const vue = new Vue({
+        <script>
+            /*  const vue = new Vue({
          
         }) */
-       
-     new Tracker(
-            {
+
+            new Tracker({
                 historyTracker: true,
-                requestUrl:'http://localhost:9000/tracker',
+                requestUrl: "http://localhost:9000/tracker",
                 FPTracker: true,
-                FCPTracker:true,
-                DOMTracker:true,
-                jsError:true,
-            }
-        )
+                FCPTracker: true,
+                DOMTracker: true,
+                jsError: true,
+                resourceError: true,
+            });
         </script>
-</body>
+    </body>
 </html>
