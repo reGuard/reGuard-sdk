@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-import  type {DefaultOptons,Optins} from "../type/index"
-import {TrackerConfig} from '../type/index'
-import { createHistoryEvent } from "../utils/pv"
-import FPTracker from "../utils/FP"
-import DOMTracker from "../utils/DomReady"
-import requestCatch from '../utils/requestCatch'
-=======
 import type { DefaultOptons, Optins } from "../type/index";
 import { TrackerConfig } from "../type/index";
 import { createHistoryEvent } from "../utils/pv";
@@ -13,7 +5,7 @@ import FPTracker from "../utils/FP";
 import DOMTracker from "../utils/DomReady";
 import injectHandleJsError from "../utils/handleError/jsError";
 import injectHandleResourceError from "../utils/handleError/resourceError";
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
+import requestCatch from '../utils/requestCatch'
 
 export default class Tracker {
     public data: Optins;
@@ -23,28 +15,6 @@ export default class Tracker {
         this.installTracker();
     }
     //初始化函数
-<<<<<<< HEAD
-    private initDef() : DefaultOptons{
-        window.history['pushState'] = createHistoryEvent('pushState')
-        window.history['replaceState'] = createHistoryEvent('replaceState')
-        return<DefaultOptons>{
-            sdkVersion:TrackerConfig.version,
-            historyTracker:false,
-            hashTracker:false,
-            domTracker:false,
-            jsError:false
-}
-}
-   
-    //targetKey自定义 例如history-pv
-    private captureEvents <T>(mouseEventList: string[], targetKey: string, data?:T){
-        mouseEventList.forEach(item =>{
-            window.addEventListener(item,()=>{
-                console.log('监听到了pv')
-                this.reportTracker({item,targetKey,data})
-            })
-        })
-=======
     private initDef(): DefaultOptons {
         window.history["pushState"] = createHistoryEvent("pushState");
         window.history["replaceState"] = createHistoryEvent("replaceState");
@@ -57,7 +27,6 @@ export default class Tracker {
             resourceError: false,
         };
     }
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
 
     //targetKey自定义 例如history-pv
     private captureEvents<T>(mouseEventList: string[], targetKey: string, data?: T) {
@@ -110,7 +79,6 @@ export default class Tracker {
             });
         });
     }
-<<<<<<< HEAD
     //js错误
     private errorEvent(){
         window.addEventListener('error',(event)=>{
@@ -121,13 +89,9 @@ export default class Tracker {
                 message:event.message
             })
         })
-=======
-    private jsError() {
-        injectHandleJsError();
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
     }
     private resourceError() {
-        injectHandleResourceError();
+       /*  injectHandleResourceError(); */
     }
     private installTracker() {
         if (this.data.DOMTracker) {
@@ -150,18 +114,16 @@ export default class Tracker {
             this.targerKeyReport();
         }
         if (this.data.jsError) {
-            this.jsError();
+            injectHandleJsError()
         }
-<<<<<<< HEAD
         if(this.data.requestTracker){
             requestCatch('open','send')
            //上报
         }
+        if(this.data.resourceError){
+            injectHandleResourceError()
+        }
 
-=======
-        if (this.data.resourceError) {
-            this.resourceError();
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
         }
     }
-}
+
