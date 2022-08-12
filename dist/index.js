@@ -52,6 +52,57 @@
         });
     }
 
+    //接口异常采集
+    function requestCatch(type1, type2) {
+        let oldopen = XMLHttpRequest.prototype[type1];
+        let oldosend = XMLHttpRequest.prototype[type2];
+        let logData = {
+            method: '',
+            url: '',
+        };
+        XMLHttpRequest.prototype.open = function (method, url, async) {
+            logData = {
+                method,
+                url,
+            };
+            return oldopen.apply(this, arguments);
+        };
+        let startTime;
+        XMLHttpRequest.prototype.send = function (body) {
+            if (logData) {
+                //发送时候记录时间
+                startTime = Date.now();
+                const handler = (type) => (event) => {
+                    let duration = Date.now() - startTime;
+                    let status = this.status;
+                    let statusText = this.statusText;
+                    let requestInfo = {
+                        type: 'xhr',
+                        eventType: event.type,
+                        pathName: logData.url,
+                        status: status + '-' + statusText,
+                        duration,
+                        response: this.response ? JSON.stringify(this.response) : '',
+                        params: body || ''
+                    };
+                    reportTracker(requestInfo);
+                };
+                this.addEventListener('load', handler(), false);
+                this.addEventListener('error', handler(), false);
+                this.addEventListener('abort', handler(), false);
+            }
+            oldosend.apply(this, arguments);
+        };
+    }
+    function reportTracker(params) {
+        let headers = {
+            type: 'application/x-www-form-urlencoded'
+        };
+        //封装blob
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon('http://localhost:9000/tracker', blob);
+    }
+
     class Tracker {
         constructor(options) {
             this.MouseEventList = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup', 'mouseenter', 'mouseout', 'mouseover'];
@@ -74,7 +125,7 @@
         captureEvents(mouseEventList, targetKey, data) {
             mouseEventList.forEach(item => {
                 window.addEventListener(item, () => {
-                    console.log('监听到了');
+                    console.log('监听到了pv');
                     this.reportTracker({ item, targetKey, data });
                 });
             });
@@ -83,6 +134,7 @@
         setUserId(uuid) {
             this.data.uuid = uuid;
         }
+        //请求异常
         //上报请求
         reportTracker(data) {
             const params = Object.assign(this.data, data, { time: new Date().getTime() });
@@ -119,7 +171,7 @@
         //js错误
         errorEvent() {
             window.addEventListener('error', (event) => {
-                console.log(2);
+                console.log(event);
                 this.reportTracker({
                     event: 'jserror',
                     targetkey: 'message',
@@ -134,7 +186,7 @@
                 event.promise.catch(error => {
                     this.reportTracker({
                         event: 'promise',
-                        targetkey: 'message',
+                        targetkey: 'reject',
                         message: error
                     });
                 });
@@ -166,6 +218,10 @@
             }
             if (this.data.jsError) {
                 this.jsError();
+            }
+            if (this.data.requestTracker) {
+                requestCatch('open', 'send');
+                //上报
             }
         }
     }

@@ -19,12 +19,12 @@
         <button target-key="btn">我添加了</button>
         <button>我没添加</button>
         <h2 class="title-body">我是小黄鸭</h2>
+        <input id="sbtn" type="button" value="成功请求" onclick='sends()'/>
+        <input id="ebtn" type="button" value="失败请求" onclick='sende()'/>
     </div>
 
     <script>
-      /*  const vue = new Vue({
-         
-        }) */
+      
        
      new Tracker(
             {
@@ -34,8 +34,29 @@
                 FCPTracker:true,
                 DOMTracker:true,
                 jsError:true,
+                requestTracker:true
             }
         )
+        function sends(){
+            let xhr = new XMLHttpRequest()
+            xhr.open('post','http://localhost:9000/tracker',true)
+            xhr.responseType = 'json'
+            xhr.send()
+            xhr.onload = function(){
+                console.log(xhr.response)
+            } 
+        }
+        
+        function sende(){
+            let xhr = new XMLHttpRequest()
+            xhr.open('post','http://localhost:9000/trackr',true)
+            xhr.responseType = 'json'
+            xhr.onload = function(){
+                console.log(xhr.response)
+            }
+            xhr.send()
+        }
+      
         </script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import {TrackerConfig} from '../type/index'
 import { createHistoryEvent } from "../utils/pv"
 import FPTracker from "../utils/FP"
 import DOMTracker from "../utils/DomReady"
+import requestCatch from '../utils/requestCatch'
 
 export default class Tracker{
     public  data: Optins
@@ -28,7 +29,7 @@ export default class Tracker{
     private captureEvents <T>(mouseEventList: string[], targetKey: string, data?:T){
         mouseEventList.forEach(item =>{
             window.addEventListener(item,()=>{
-                console.log('监听到了')
+                console.log('监听到了pv')
                 this.reportTracker({item,targetKey,data})
             })
         })
@@ -38,7 +39,7 @@ export default class Tracker{
     public setUserId<T extends DefaultOptons['uuid'] >(uuid: T){
         this.data.uuid = uuid
     }
-
+    //请求异常
     //上报请求
     private reportTracker<T>(data: T){
         const params = Object.assign(this.data,data,{time:new Date().getTime()})
@@ -77,6 +78,7 @@ export default class Tracker{
     //js错误
     private errorEvent(){
         window.addEventListener('error',(event)=>{
+            console.log(event)
             this.reportTracker({
                 event:'jserror',
                 targetkey:'message',
@@ -123,6 +125,10 @@ export default class Tracker{
         }
         if(this.data.jsError){
             this.jsError()
+        }
+        if(this.data.requestTracker){
+            requestCatch('open','send')
+           //上报
         }
 
         }

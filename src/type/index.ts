@@ -24,7 +24,8 @@ export interface Optins extends Partial<DefaultOptons>{
     requestUrl: string,
     FPTracker?: boolean,
     FCPTracker?: boolean,
-    DOMTracker?:boolean
+    DOMTracker?: boolean
+    requestTracker?: boolean
 }
 export enum TrackerConfig {
     version = '1.0.0'
