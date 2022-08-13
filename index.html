@@ -1,35 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<<<<<<< HEAD
-<head>
-    <style>
-        .title-body{
-            width: 100%;
-            height: 100%;
-            background-color: blueviolet;
-        }
-    </style>
-    <script src="./dist/index.js"></script>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <div>
-        <button target-key="btn">我添加了</button>
-        <button>我没添加</button>
-        <h2 class="title-body">我是小黄鸭</h2>
-        <input id="sbtn" type="button" value="成功请求" onclick='sends()'/>
-        <input id="ebtn" type="button" value="失败请求" onclick='sende()'/>
-    </div>
-
-    <script>
-      
-       
-     new Tracker(
-            {
-=======
     <head>
         <style>
             .title-body {
@@ -58,44 +28,15 @@
         }) */
 
             new Tracker({
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
                 historyTracker: true,
                 requestUrl: "http://localhost:9000/tracker",
                 FPTracker: true,
-<<<<<<< HEAD
-                FCPTracker:true,
-                DOMTracker:true,
-                jsError:true,
-                requestTracker:true
-            }
-        )
-        function sends(){
-            let xhr = new XMLHttpRequest()
-            xhr.open('post','http://localhost:9000/tracker',true)
-            xhr.responseType = 'json'
-            xhr.send()
-            xhr.onload = function(){
-                console.log(xhr.response)
-            } 
-        }
-        
-        function sende(){
-            let xhr = new XMLHttpRequest()
-            xhr.open('post','http://localhost:9000/trackr',true)
-            xhr.responseType = 'json'
-            xhr.onload = function(){
-                console.log(xhr.response)
-            }
-            xhr.send()
-        }
-      
-=======
                 FCPTracker: true,
                 DOMTracker: true,
                 jsError: true,
                 resourceError: true,
+                ScreenTracker:true
             });
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
         </script>
     </body>
 </html>

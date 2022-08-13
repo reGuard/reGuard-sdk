@@ -1,11 +1,12 @@
 import type { DefaultOptons, Optins } from "../type/index";
 import { TrackerConfig } from "../type/index";
-import { createHistoryEvent } from "../utils/pv";
-import FPTracker from "../utils/FP";
-import DOMTracker from "../utils/DomReady";
+import { createHistoryEvent } from "../utils/PV/pv";
+import FPTracker from "../utils/FP/FP";
+import DOMTracker from "../utils/DomReady/DomReady";
 import injectHandleJsError from "../utils/handleError/jsError";
 import injectHandleResourceError from "../utils/handleError/resourceError";
-import requestCatch from '../utils/requestCatch'
+import requestCatch from '../utils/requestCatch/requestCatch'
+import blankScreen from '../utils/WhiteScreen/whiteScreen'
 
 export default class Tracker {
     public data: Optins;
@@ -123,7 +124,9 @@ export default class Tracker {
         if(this.data.resourceError){
             injectHandleResourceError()
         }
-
+        if(this.data.ScreenTracker){
+            blankScreen()
+        }
         }
     }
 

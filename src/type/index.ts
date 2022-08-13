@@ -27,6 +27,7 @@ export interface Optins extends Partial<DefaultOptons>{
     FCPTracker?: boolean,
     DOMTracker?: boolean
     requestTracker?: boolean,
+    ScreenTracker?: boolean
 }
 
 export enum TrackerConfig {

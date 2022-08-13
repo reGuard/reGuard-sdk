@@ -1,4 +1,5 @@
     //接口异常采集
+    import reportTracker from '../publicReport/publicReport'
     function requestCatch <T extends keyof XMLHttpRequest>(type1:T,type2:T){
       let oldopen =  XMLHttpRequest.prototype[type1]
       let oldosend =  XMLHttpRequest.prototype[type2]
@@ -47,13 +48,5 @@
       }
     }
 
-    function reportTracker<T>(params: T){
-      let headers = {
-          type: 'application/x-www-form-urlencoded'
-      }
-      //封装blob
-      let blob  = new Blob([JSON.stringify(params)],headers)
-      navigator.sendBeacon('http://localhost:9000/tracker',blob)
-      
-  }
+
     export default requestCatch

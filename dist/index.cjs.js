@@ -43,12 +43,74 @@ function FPTracker(FCP) {
 }
 
 function DOMTracker() {
-    document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOMReady: True', new Date());
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOMReady: True", new Date());
     });
 }
 
-<<<<<<< HEAD
+function injectHandleJsError() {
+    window.addEventListener("error", function (event) {
+        // 监听语法、引用等js错误
+        const reportData = {
+            kind: "stability",
+            type: "error",
+            errorType: "jsError",
+            message: event.message,
+            fileName: event.filename,
+            position: (event.lineno || 0) + ":" + (event.colno || 0), // 异常位置
+        };
+        console.log("jsError", reportData);
+    });
+    window.addEventListener("unhandledrejection", function (event) {
+        // 监听未被catch的promise错误
+        const reportData = {
+            kind: "stability",
+            type: "error",
+            errorType: "promiseError",
+            message: "",
+            fileName: "",
+            position: "",
+        };
+        if (event.reason instanceof Error) {
+            // promise的回调中发生了错误 或是 reject了一个Error的实例
+            reportData.message = event.reason.message;
+        }
+        else {
+            // reject了字符串等其他内容
+            reportData.message = event.reason;
+        }
+        console.log("promiseError", reportData);
+    });
+}
+
+function injectHandleResourceError() {
+    window.addEventListener("error", function (event) {
+        // 监听资源加载错误
+        if (!event)
+            return;
+        const target = event.target;
+        const isElementTarget = target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement;
+        if (isElementTarget)
+            return;
+        ({
+            kind: "stability",
+            type: "error",
+            errorType: "resourceError",
+            message: `加载${target.tagName}资源失败`,
+            url: event.target.src || event.target.href,
+        });
+    }, true);
+}
+
+function reportTracker(params) {
+    let headers = {
+        type: 'application/x-www-form-urlencoded'
+    };
+    //封装blob
+    let blob = new Blob([JSON.stringify(params)], headers);
+    navigator.sendBeacon('http://localhost:9000/tracker', blob);
+}
+
 //接口异常采集
 function requestCatch(type1, type2) {
     let oldopen = XMLHttpRequest.prototype[type1];
@@ -91,67 +153,57 @@ function requestCatch(type1, type2) {
         oldosend.apply(this, arguments);
     };
 }
-function reportTracker(params) {
-    let headers = {
-        type: 'application/x-www-form-urlencoded'
-    };
-    //封装blob
-    let blob = new Blob([JSON.stringify(params)], headers);
-    navigator.sendBeacon('http://localhost:9000/tracker', blob);
-=======
-function injectHandleJsError() {
-    window.addEventListener("error", function (event) {
-        // 监听语法、引用等js错误
-        const reportData = {
-            kind: "stability",
-            type: "error",
-            errorType: "jsError",
-            message: event.message,
-            fileName: event.filename,
-            position: (event.lineno || 0) + ":" + (event.colno || 0), // 异常位置
-        };
-        console.log("jsError", reportData);
-    });
-    window.addEventListener("unhandledrejection", function (event) {
-        // 监听未被catch的promise错误
-        const reportData = {
-            kind: "stability",
-            type: "error",
-            errorType: "promiseError",
-            message: "",
-            fileName: "",
-            position: "",
-        };
-        if (event.reason instanceof Error) {
-            // promise的回调中发生了错误 或是 reject了一个Error的实例
-            reportData.message = event.reason.message;
-        }
-        else {
-            // reject了字符串等其他内容
-            reportData.message = event.reason;
-        }
-        console.log("promiseError", reportData);
-    });
-}
 
-function injectHandleResourceError() {
-    window.addEventListener("error", function (event) {
-        // 监听资源加载错误
-        let target = event.target;
-        const isElementTarget = target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement;
-        if (!isElementTarget)
-            return;
-        console.log(event);
-        ({
-            kind: "stability",
-            type: "error",
-            errorType: "resourceError",
-            message: event.message,
-            fileName: event.filename,
-            position: (event.lineno || 0) + ":" + (event.colno || 0), // 异常位置
-        });
-    }, true);
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
+function getSelector(element) {
+    var selector;
+    if (element.id) {
+        selector = `#${element.id}`;
+    }
+    else if (element.className && typeof element.className === "string") {
+        selector =
+            "." +
+                element.className
+                    .split(" ")
+                    .filter(function (item) {
+                    return !!item;
+                })
+                    .join(".");
+    }
+    else {
+        selector = element.nodeName.toLowerCase();
+    }
+    return selector;
+}
+function blankScreen() {
+    const wrapperSelectors = ["body", "html", "#container", ".content"];
+    let emptyPoints = 0;
+    function isWrapper(element) {
+        let selector = getSelector(element);
+        if (wrapperSelectors.indexOf(selector) >= 0) {
+            emptyPoints++;
+        }
+    }
+    onload = function () {
+        let xElements, yElements;
+        for (let i = 1; i <= 9; i++) {
+            xElements = document.elementsFromPoint((window.innerWidth * i) / 10, window.innerHeight / 2);
+            yElements = document.elementsFromPoint(window.innerWidth / 2, (window.innerHeight * i) / 10);
+            isWrapper(xElements[0]);
+            isWrapper(yElements[0]);
+        }
+        if (emptyPoints >= 0) {
+            let centerElements = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+            let reportData = {
+                kind: "stability",
+                type: "blank",
+                emptyPoints: "" + emptyPoints,
+                screen: window.screen.width + "x" + window.screen.height,
+                viewPoint: window.innerWidth + "x" + window.innerHeight,
+                selector: getSelector(centerElements[0]),
+            };
+            console.log('白屏', reportData);
+        }
+    };
 }
 
 class Tracker {
@@ -177,11 +229,7 @@ class Tracker {
     captureEvents(mouseEventList, targetKey, data) {
         mouseEventList.forEach((item) => {
             window.addEventListener(item, () => {
-<<<<<<< HEAD
-                console.log('监听到了pv');
-=======
                 console.log("监听到了");
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
                 this.reportTracker({ item, targetKey, data });
             });
         });
@@ -224,7 +272,6 @@ class Tracker {
             });
         });
     }
-<<<<<<< HEAD
     //js错误
     errorEvent() {
         window.addEventListener('error', (event) => {
@@ -236,26 +283,8 @@ class Tracker {
             });
         });
     }
-    //promise错误
-    promistReject() {
-        window.addEventListener('unhandledrejection', (event) => {
-            //通过catch捕获错误
-            event.promise.catch(error => {
-                this.reportTracker({
-                    event: 'promise',
-                    targetkey: 'reject',
-                    message: error
-                });
-            });
-        });
-    }
-=======
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
-    jsError() {
-        injectHandleJsError();
-    }
     resourceError() {
-        injectHandleResourceError();
+        /*  injectHandleResourceError(); */
     }
     installTracker() {
         if (this.data.DOMTracker) {
@@ -278,16 +307,17 @@ class Tracker {
             this.targerKeyReport();
         }
         if (this.data.jsError) {
-            this.jsError();
+            injectHandleJsError();
         }
-<<<<<<< HEAD
         if (this.data.requestTracker) {
             requestCatch('open', 'send');
             //上报
-=======
+        }
         if (this.data.resourceError) {
-            this.resourceError();
->>>>>>> dae8c81497a9cdc7adce454421a4dacabe0d866d
+            injectHandleResourceError();
+        }
+        if (this.data.ScreenTracker) {
+            blankScreen();
         }
     }
 }
