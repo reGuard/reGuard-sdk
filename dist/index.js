@@ -19,8 +19,8 @@
             /* Event创建自定义事件
             dispatchEvent派发事件
             addEventListener监听事件
-            emoveEventListener删除事件
-            其实也就是发布阅模式
+            removeEventListener删除事件
+            其实也就是发布订阅模式
             */
             window.dispatchEvent(e);
             return res;
@@ -94,15 +94,18 @@
                 return;
             const target = event.target;
             const isElementTarget = target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement;
-            if (isElementTarget)
-                return;
-            ({
-                kind: "stability",
-                type: "error",
-                errorType: "resourceError",
-                message: `加载${target.tagName}资源失败`,
-                url: event.target.src || event.target.href,
-            });
+            if (isElementTarget) {
+                const reportData = {
+                    kind: "stability",
+                    type: "error",
+                    errorType: "resourceError",
+                    message: `加载${target.tagName}资源失败`,
+                    url: event.target.src || event.target.href,
+                };
+                console.log(reportData);
+            }
+            /* true */
+            return;
         }, true);
     }
 
@@ -117,11 +120,13 @@
 
     //接口异常采集
     function requestCatch(type1, type2) {
+        //开启fetch监控
+        fetchCatch();
         let oldopen = XMLHttpRequest.prototype[type1];
         let oldosend = XMLHttpRequest.prototype[type2];
         let logData = {
-            method: '',
-            url: '',
+            method: "",
+            url: "",
         };
         XMLHttpRequest.prototype.open = function (method, url, async) {
             logData = {
@@ -140,21 +145,62 @@
                     let status = this.status;
                     let statusText = this.statusText;
                     let requestInfo = {
-                        type: 'xhr',
+                        type: "xhr",
                         eventType: event.type,
                         pathName: logData.url,
-                        status: status + '-' + statusText,
+                        status: status + "-" + statusText,
                         duration,
-                        response: this.response ? JSON.stringify(this.response) : '',
-                        params: body || ''
+                        response: this.response ? JSON.stringify(this.response) : "",
+                        params: body || "",
                     };
                     reportTracker(requestInfo);
                 };
-                this.addEventListener('load', handler(), false);
-                this.addEventListener('error', handler(), false);
-                this.addEventListener('abort', handler(), false);
+                this.addEventListener("load", handler(), false);
+                this.addEventListener("error", handler(), false);
+                this.addEventListener("abort", handler(), false);
             }
             oldosend.apply(this, arguments);
+        };
+    }
+    function fetchCatch() {
+        let originFetch = window.fetch;
+        window.fetch = function (input, init) {
+            let startTime = Date.now();
+            let args = arguments;
+            let fetchInput = args[0];
+            let method = 'GET';
+            let url;
+            if (typeof fetchInput === 'string') {
+                url = fetchInput;
+            }
+            else if ('Request' in window && fetchInput instanceof window.Request) {
+                url = fetchInput.url;
+                if (fetchInput.method) {
+                    method = fetchInput.method;
+                }
+            }
+            else {
+                url = '' + fetchInput;
+            }
+            if (args[1] && args[1].method) {
+                method = args[1].method;
+            }
+            let fetchData = {
+                method: method,
+                pathName: url,
+                status: 0,
+                type: '',
+                duration: 0,
+                response: 'null',
+                params: (init === null || init === void 0 ? void 0 : init.body) || ''
+            };
+            return originFetch.apply(this, arguments).then(function (response) {
+                fetchData.status = response.status;
+                fetchData.type = 'fetch';
+                fetchData.duration = Date.now() - startTime;
+                console.log(fetchData);
+                return response;
+            });
         };
     }
 
@@ -205,9 +251,37 @@
                     viewPoint: window.innerWidth + "x" + window.innerHeight,
                     selector: getSelector(centerElements[0]),
                 };
-                console.log('白屏', reportData);
+                console.log("白屏", reportData);
             }
         };
+    }
+
+    function handlePerformanceIndx() {
+        window.addEventListener("load", () => {
+            setTimeout(() => {
+                const perfEntries = performance.getEntriesByType("navigation");
+                const { fetchStart, connectStart, connectEnd, requestStart, responseStart, responseEnd, domInteractive, domComplete, redirectEnd, secureConnectionStart, redirectStart, domContentLoadedEventStart, domContentLoadedEventEnd, loadEventStart, domainLookupEnd, domainLookupStart } = perfEntries[0] || performance.timing;
+                const DNSTime = domainLookupEnd - domainLookupStart; // DNS域名解析耗时
+                const connectTime = connectEnd - connectStart; // 建立TCP连接耗时
+                const ttfbTime = requestStart - requestStart; // 发出页面请求到接收到应答数据第一个字节所花费的毫秒数
+                const responseTime = responseEnd - responseStart; // 请求响应完全接收耗时
+                const domContentLoadedTime = domContentLoadedEventEnd - domContentLoadedEventStart; // DOMContentLoaded事件回调函数执行耗时
+                const parseDOMTime = domComplete - domInteractive; // DOM解析的耗时
+                const timeToInteractive = domInteractive - fetchStart; // 首次可交互耗时
+                const completeLoadTime = loadEventStart - fetchStart; // 完整的加载耗时
+                const logData = {
+                    DNSTime,
+                    connectTime,
+                    ttfbTime,
+                    responseTime,
+                    parseDOMTime,
+                    domContentLoadedTime,
+                    timeToInteractive,
+                    completeLoadTime,
+                };
+                console.log("performanceIndex", logData);
+            }, 0);
+        });
     }
 
     class Tracker {
@@ -216,7 +290,7 @@
             this.data = Object.assign(this.initDef(), options);
             this.installTracker();
         }
-        //初始化函数
+        // 初始化函数
         initDef() {
             window.history["pushState"] = createHistoryEvent("pushState");
             window.history["replaceState"] = createHistoryEvent("replaceState");
@@ -226,7 +300,6 @@
                 hashTracker: false,
                 domTracker: false,
                 jsError: false,
-                resourceError: false,
             };
         }
         //targetKey自定义 例如history-pv
@@ -234,6 +307,11 @@
             mouseEventList.forEach((item) => {
                 window.addEventListener(item, () => {
                     console.log("监听到了");
+                    if (data) {
+                        data.stayTime = new Date().getTime() - data.startTime;
+                        data.startTime = new Date().getTime();
+                    }
+                    console.log(data);
                     this.reportTracker({ item, targetKey, data });
                 });
             });
@@ -276,27 +354,14 @@
                 });
             });
         }
-        //js错误
-        errorEvent() {
-            window.addEventListener('error', (event) => {
-                console.log(event);
-                this.reportTracker({
-                    event: 'jserror',
-                    targetkey: 'message',
-                    message: event.message
-                });
-            });
-        }
-        resourceError() {
-            /*  injectHandleResourceError(); */
-        }
         installTracker() {
             if (this.data.DOMTracker) {
                 DOMTracker();
             }
             //history模式监控
             if (this.data.historyTracker) {
-                this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv");
+                let startTime = Date.now();
+                this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv", { startTime, stayTime: 0 });
             }
             //hash模式
             if (this.data.hashTracker) {
@@ -310,18 +375,25 @@
             if (this.data.DOMTracker) {
                 this.targerKeyReport();
             }
+            //js监听
             if (this.data.jsError) {
                 injectHandleJsError();
             }
+            //请求监听
             if (this.data.requestTracker) {
-                requestCatch('open', 'send');
-                //上报
+                requestCatch("open", "send");
             }
+            //资源加载错误监听
             if (this.data.resourceError) {
                 injectHandleResourceError();
             }
+            //白屏监听
             if (this.data.ScreenTracker) {
                 blankScreen();
+            }
+            //
+            if (this.data.performanceIndex) {
+                handlePerformanceIndx();
             }
         }
     }

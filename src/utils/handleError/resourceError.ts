@@ -6,15 +6,18 @@ export default function injectHandleResourceError() {
             if (!event) return;
             const target: any = event.target;
             const isElementTarget = target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement;
-            if (isElementTarget) return;
-
-            const reportData = {
-                kind: "stability", // 稳定性指标
-                type: "error", // 异常大类
-                errorType: "resourceError", // 异常具体类型
-                message: `加载${target.tagName}资源失败`, // 异常信息
-                url: event.target.src || event.target.href,
-            };
+            if (isElementTarget) {
+                const reportData = {
+                    kind: "stability", // 稳定性指标
+                    type: "error", // 异常大类
+                    errorType: "resourceError", // 异常具体类型
+                    message: `加载${target.tagName}资源失败`, // 异常信息
+                    url: event.target.src || event.target.href,
+                };
+                console.log(reportData)
+            }
+            /* true */
+            return;
         },
         true
     );

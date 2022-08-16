@@ -10,8 +10,8 @@ export const createHistoryEvent = <T extends keyof History>(type: T) => {
         /* Event创建自定义事件
         dispatchEvent派发事件
         addEventListener监听事件
-        emoveEventListener删除事件
-        其实也就是发布阅模式
+        removeEventListener删除事件
+        其实也就是发布订阅模式
         */
 
         window.dispatchEvent(e);

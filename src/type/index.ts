@@ -17,17 +17,19 @@ export interface DefaultOptons {
     sdkVersion: string | number;
     extra: Record<string, any> | undefined;
     jsError: boolean;
-    resourceError: boolean;
 }
 
 //Partial代表将属性变为可选属性
-export interface Optins extends Partial<DefaultOptons>{
-    requestUrl: string,
-    FPTracker?: boolean,
-    FCPTracker?: boolean,
-    DOMTracker?: boolean
-    requestTracker?: boolean,
-    ScreenTracker?: boolean
+export interface Optins extends Partial<DefaultOptons> {
+    requestUrl: string;
+    FPTracker?: boolean;
+    FCPTracker?: boolean;
+    DOMTracker?: boolean;
+    requestTracker?: boolean;
+    ScreenTracker?: boolean;
+    resourceError?: boolean;
+    DNSTIME?: boolean;
+    performanceIndex?: boolean;
 }
 
 export enum TrackerConfig {
@@ -44,4 +46,12 @@ export interface Requests {
     response: any; //响应内容
     params: any; //参数
     success: boolean; //是否成功
+}
+
+// 个人用户的信息
+export interface PersonInfo {
+    user?: string;
+    pageUrl?: string;
+    startTime: number;
+    stayTime: number;
 }

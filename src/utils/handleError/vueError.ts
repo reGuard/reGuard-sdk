@@ -1,3 +1,5 @@
+import Vue from "vue";
+
 export default function injectHandleVueError() {
     if (!Vue) return;
     Vue.config.errorHandler = (error, vm, info) => {

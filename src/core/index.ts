@@ -1,12 +1,13 @@
 import type { DefaultOptons, Optins } from "../type/index";
-import { TrackerConfig } from "../type/index";
+import { TrackerConfig, PersonInfo } from "../type/index";
 import { createHistoryEvent } from "../utils/PV/pv";
 import FPTracker from "../utils/FP/FP";
 import DOMTracker from "../utils/DomReady/DomReady";
 import injectHandleJsError from "../utils/handleError/jsError";
 import injectHandleResourceError from "../utils/handleError/resourceError";
-import requestCatch from '../utils/requestCatch/requestCatch'
-import blankScreen from '../utils/WhiteScreen/whiteScreen'
+import requestCatch from "../utils/requestCatch/requestCatch";
+import blankScreen from "../utils/WhiteScreen/whiteScreen";
+import performanceIndex from "../utils/performanceIndex/performanceIndex";
 
 export default class Tracker {
     public data: Optins;
@@ -15,7 +16,7 @@ export default class Tracker {
         this.data = Object.assign(this.initDef(), options);
         this.installTracker();
     }
-    //初始化函数
+    // 初始化函数
     private initDef(): DefaultOptons {
         window.history["pushState"] = createHistoryEvent("pushState");
         window.history["replaceState"] = createHistoryEvent("replaceState");
@@ -25,15 +26,20 @@ export default class Tracker {
             hashTracker: false,
             domTracker: false,
             jsError: false,
-            resourceError: false,
         };
     }
 
     //targetKey自定义 例如history-pv
-    private captureEvents<T>(mouseEventList: string[], targetKey: string, data?: T) {
+    private captureEvents<T extends PersonInfo>(mouseEventList: string[], targetKey: string, data?: T) {
         mouseEventList.forEach((item) => {
             window.addEventListener(item, () => {
                 console.log("监听到了");
+                if (data) {
+                    data.stayTime = new Date().getTime() - data.startTime;
+                    data.startTime = new Date().getTime();
+                }
+                console.log(data);
+
                 this.reportTracker({ item, targetKey, data });
             });
         });
@@ -80,27 +86,15 @@ export default class Tracker {
             });
         });
     }
-    //js错误
-    private errorEvent(){
-        window.addEventListener('error',(event)=>{
-            console.log(event)
-            this.reportTracker({
-                event:'jserror',
-                targetkey:'message',
-                message:event.message
-            })
-        })
-    }
-    private resourceError() {
-       /*  injectHandleResourceError(); */
-    }
+
     private installTracker() {
         if (this.data.DOMTracker) {
             DOMTracker();
         }
         //history模式监控
         if (this.data.historyTracker) {
-            this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv");
+            let startTime = Date.now();
+            this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv", { startTime, stayTime: 0 });
         }
         //hash模式
         if (this.data.hashTracker) {
@@ -114,19 +108,25 @@ export default class Tracker {
         if (this.data.DOMTracker) {
             this.targerKeyReport();
         }
+        //js监听
         if (this.data.jsError) {
-            injectHandleJsError()
+            injectHandleJsError();
         }
-        if(this.data.requestTracker){
-            requestCatch('open','send')
-           //上报
+        //请求监听
+        if (this.data.requestTracker) {
+            requestCatch("open", "send");
         }
-        if(this.data.resourceError){
-            injectHandleResourceError()
+        //资源加载错误监听
+        if (this.data.resourceError) {
+            injectHandleResourceError();
         }
-        if(this.data.ScreenTracker){
-            blankScreen()
+        //白屏监听
+        if (this.data.ScreenTracker) {
+            blankScreen();
         }
+        //
+        if (this.data.performanceIndex) {
+            performanceIndex();
         }
     }
-
+}
