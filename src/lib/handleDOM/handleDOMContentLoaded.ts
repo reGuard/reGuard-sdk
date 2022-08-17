@@ -1,4 +1,4 @@
-export default function DOMTracker(): void {
+export default function handleDOMContentLoaded(): void {
     document.addEventListener("DOMContentLoaded", function () {
         console.log("DOMReady: True", new Date());
     });

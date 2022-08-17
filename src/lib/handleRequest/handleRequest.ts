@@ -1,5 +1,5 @@
 //接口异常采集
-import reportTracker from "../publicReport/publicReport";
+import reportTracker from "../../utils/publicReport";
 
 function requestCatch<T extends keyof XMLHttpRequest>(type1: T, type2: T) {
     //开启fetch监控
@@ -40,7 +40,7 @@ function requestCatch<T extends keyof XMLHttpRequest>(type1: T, type2: T) {
                         response: this.response ? JSON.stringify(this.response) : "",
                         params: body || "",
                     };
-                    reportTracker(requestInfo);
+                    reportTracker("http://localhost:9000/tracker", requestInfo);
                 };
 
             this.addEventListener("load", handler("load"), false);

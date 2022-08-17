@@ -17,8 +17,8 @@ export interface Requests {
     success: boolean; //是否成功
 }
 
-// 个人用户的信息
-export interface PersonInfo {
+// 用户行为信息
+export interface UserBehavior {
     user?: string;
     pageUrl?: string;
     startTime: number;

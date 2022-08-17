@@ -5,21 +5,35 @@ var TrackerConfig;
 
 //keyof 获取的是类型
 const createHistoryEvent = (type) => {
-    const origin = history[type];
+    const origin = window.history[type];
     //this是假参数
     return function () {
         const res = origin.apply(this, arguments);
         const e = new Event(type);
-        /* Event创建自定义事件
-        dispatchEvent派发事件
-        addEventListener监听事件
-        removeEventListener删除事件
-        其实也就是发布订阅模式
+        /*
+            Event创建自定义事件
+            dispatchEvent派发事件
+            addEventListener监听事件
+            removeEventListener删除事件
+            其实也就是发布订阅模式
         */
         window.dispatchEvent(e);
         return res;
     };
 };
+// targetKey自定义 例如 history-pv
+function captureEvents(mouseEventList, targetKey, data) {
+    mouseEventList.forEach((item) => {
+        window.addEventListener(item, () => {
+            console.log("监听到了");
+            if (data) {
+                data.stayTime = new Date().getTime() - data.startTime;
+                data.startTime = new Date().getTime();
+            }
+            console.log(data);
+        });
+    });
+}
 
 function FPTracker(FCP) {
     const entryHandler = (list) => {
@@ -40,9 +54,25 @@ function FPTracker(FCP) {
     observer.observe({ type: "paint", buffered: true });
 }
 
-function DOMTracker() {
+function handleDOMContentLoaded() {
     document.addEventListener("DOMContentLoaded", function () {
         console.log("DOMReady: True", new Date());
+    });
+}
+
+const MouseEventList = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
+function handleTargetDOM () {
+    MouseEventList.forEach((ev) => {
+        window.addEventListener(ev, (e) => {
+            const target = e.target;
+            const targetKey = target.getAttribute("target-key");
+            if (targetKey) {
+                console.log({
+                    event: ev,
+                    target: targetKey,
+                }, "监听到了");
+            }
+        });
     });
 }
 
@@ -103,13 +133,25 @@ function injectHandleResourceError() {
     }, true);
 }
 
-function reportTracker(params) {
-    let headers = {
-        type: 'application/x-www-form-urlencoded'
-    };
-    //封装blob
-    let blob = new Blob([JSON.stringify(params)], headers);
-    navigator.sendBeacon('http://localhost:9000/tracker', blob);
+// 兼容性判断
+const compatibility$1 = {
+    canUseSendBeacon: !!navigator.sendBeacon,
+};
+function reportTracker(url, params) {
+    params = Object.assign(params, { reportTime: new Date().getTime() });
+    if (compatibility$1.canUseSendBeacon && params) {
+        let headers = {
+            type: "application/x-www-form-urlencoded",
+        };
+        //封装blob
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon(url, blob);
+    }
+    else {
+        // 使用img标签上报
+        const img = new Image();
+        img.src = `${url}?data=${encodeURIComponent(JSON.stringify(params))}`;
+    }
 }
 
 //接口异常采集
@@ -147,7 +189,7 @@ function requestCatch(type1, type2) {
                     response: this.response ? JSON.stringify(this.response) : "",
                     params: body || "",
                 };
-                reportTracker(requestInfo);
+                reportTracker("http://localhost:9000/tracker", requestInfo);
             };
             this.addEventListener("load", handler(), false);
             this.addEventListener("error", handler(), false);
@@ -162,19 +204,19 @@ function fetchCatch() {
         let startTime = Date.now();
         let args = arguments;
         let fetchInput = args[0];
-        let method = 'GET';
+        let method = "GET";
         let url;
-        if (typeof fetchInput === 'string') {
+        if (typeof fetchInput === "string") {
             url = fetchInput;
         }
-        else if ('Request' in window && fetchInput instanceof window.Request) {
+        else if ("Request" in window && fetchInput instanceof window.Request) {
             url = fetchInput.url;
             if (fetchInput.method) {
                 method = fetchInput.method;
             }
         }
         else {
-            url = '' + fetchInput;
+            url = "" + fetchInput;
         }
         if (args[1] && args[1].method) {
             method = args[1].method;
@@ -183,14 +225,14 @@ function fetchCatch() {
             method: method,
             pathName: url,
             status: 0,
-            type: '',
+            type: "",
             duration: 0,
-            response: 'null',
-            params: (init === null || init === void 0 ? void 0 : init.body) || ''
+            response: "null",
+            params: (init === null || init === void 0 ? void 0 : init.body) || "",
         };
         return originFetch.apply(this, arguments).then(function (response) {
             fetchData.status = response.status;
-            fetchData.type = 'fetch';
+            fetchData.type = "fetch";
             fetchData.duration = Date.now() - startTime;
             console.log(fetchData);
             return response;
@@ -250,8 +292,13 @@ function blankScreen() {
     };
 }
 
-function handlePerformanceIndx() {
-    window.addEventListener("load", () => {
+// 兼容性判断
+const compatibility = {
+    performance: !!window.performance,
+    getEntriesByType: !!(window.performance && performance.getEntriesByType),
+};
+function handleNavigationTiming() {
+    if (compatibility.getEntriesByType) {
         setTimeout(() => {
             const perfEntries = performance.getEntriesByType("navigation");
             const { fetchStart, connectStart, connectEnd, requestStart, responseStart, responseEnd, domInteractive, domComplete, redirectEnd, secureConnectionStart, redirectStart, domContentLoadedEventStart, domContentLoadedEventEnd, loadEventStart, domainLookupEnd, domainLookupStart } = perfEntries[0] || performance.timing;
@@ -264,6 +311,8 @@ function handlePerformanceIndx() {
             const timeToInteractive = domInteractive - fetchStart; // 首次可交互耗时
             const completeLoadTime = loadEventStart - fetchStart; // 完整的加载耗时
             const logData = {
+                type: "pagePerformance",
+                URL: window.location.href,
                 DNSTime,
                 connectTime,
                 ttfbTime,
@@ -274,14 +323,25 @@ function handlePerformanceIndx() {
                 completeLoadTime,
             };
             console.log("performanceIndex", logData);
-        }, 0);
-    });
+        }, 3000);
+    }
+}
+function init() {
+    if (document.readyState === "complete") {
+        if (compatibility.performance)
+            handleNavigationTiming();
+    }
+    else {
+        window.addEventListener("load", () => {
+            if (compatibility.performance)
+                handleNavigationTiming();
+        });
+    }
 }
 
 class Tracker {
     constructor(options) {
-        this.MouseEventList = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
-        this.data = Object.assign(this.initDef(), options);
+        this.options = Object.assign(this.initDef(), options);
         this.installTracker();
     }
     // 初始化函数
@@ -290,104 +350,59 @@ class Tracker {
         window.history["replaceState"] = createHistoryEvent("replaceState");
         return {
             sdkVersion: TrackerConfig.version,
-            historyTracker: false,
-            hashTracker: false,
-            domTracker: false,
-            jsError: false,
         };
-    }
-    //targetKey自定义 例如history-pv
-    captureEvents(mouseEventList, targetKey, data) {
-        mouseEventList.forEach((item) => {
-            window.addEventListener(item, () => {
-                console.log("监听到了");
-                if (data) {
-                    data.stayTime = new Date().getTime() - data.startTime;
-                    data.startTime = new Date().getTime();
-                }
-                console.log(data);
-                this.reportTracker({ item, targetKey, data });
-            });
-        });
     }
     //设置用户id
     setUserId(uuid) {
-        this.data.uuid = uuid;
+        this.options.uuid = uuid;
     }
-    //请求异常
     //上报请求
     reportTracker(data) {
-        const params = Object.assign(this.data, data, { time: new Date().getTime() });
-        let headers = {
-            type: "application/x-www-form-urlencoded",
-        };
-        //封装blob
-        let blob = new Blob([JSON.stringify(params)], headers);
-        navigator.sendBeacon(this.data.requestUrl, blob);
+        const params = Object.assign(this.options, data);
+        reportTracker(this.options.requestUrl, params);
     }
     //手动上报
     sendReport(data) {
         this.reportTracker(data);
     }
-    //dom监听
-    targerKeyReport() {
-        this.MouseEventList.forEach((ev) => {
-            window.addEventListener(ev, (e) => {
-                const target = e.target;
-                const targetKey = target.getAttribute("target-key");
-                if (targetKey) {
-                    console.log({
-                        event: ev,
-                        target: targetKey,
-                    }, "监听到了");
-                    this.reportTracker({
-                        event: ev,
-                        target: targetKey,
-                    });
-                }
-            });
-        });
-    }
     installTracker() {
-        if (this.data.DOMTracker) {
-            DOMTracker();
-        }
-        //history模式监控
-        if (this.data.historyTracker) {
+        //history模式监控pv
+        if (this.options.historyTracker) {
             let startTime = Date.now();
-            this.captureEvents(["pushState", "replaceState", "popstate"], "history-pv", { startTime, stayTime: 0 });
+            captureEvents(["pushState", "replaceState", "popstate"], "history-pv", { startTime, stayTime: 0 });
         }
-        //hash模式
-        if (this.data.hashTracker) {
-            this.captureEvents(["hashchange"], "hash-pv");
+        //hash模式pv
+        if (this.options.hashTracker) {
+            captureEvents(["hashchange"]);
         }
         //Fp监控
-        if (this.data.FPTracker) {
-            FPTracker(this.data.FCPTracker);
+        if (this.options.FPTracker) {
+            FPTracker(this.options.FCPTracker);
         }
         //dom监听
-        if (this.data.DOMTracker) {
-            this.targerKeyReport();
+        if (this.options.DOMTracker) {
+            handleDOMContentLoaded();
+            handleTargetDOM();
         }
         //js监听
-        if (this.data.jsError) {
+        if (this.options.jsError) {
             injectHandleJsError();
         }
         //请求监听
-        if (this.data.requestTracker) {
+        if (this.options.requestTracker) {
             requestCatch("open", "send");
         }
         //资源加载错误监听
-        if (this.data.resourceError) {
+        if (this.options.resourceError) {
             injectHandleResourceError();
         }
         //白屏监听
-        if (this.data.ScreenTracker) {
+        if (this.options.screenTracker) {
             blankScreen();
         }
-        //
-        if (this.data.performanceIndex) {
-            handlePerformanceIndx();
+        // 性能指标
+        if (this.options.performanceIndex) {
+            init();
         }
     }
 }
