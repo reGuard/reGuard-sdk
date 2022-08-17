@@ -1,5 +1,11 @@
-export default function handlePerformanceIndx() {
-    window.addEventListener("load", () => {
+// 兼容性判断
+const compatibility = {
+    performance: !!window.performance,
+    getEntriesByType: !!(window.performance && performance.getEntriesByType),
+};
+
+function handleNavigationTiming() {
+    if (compatibility.getEntriesByType) {
         setTimeout(() => {
             const perfEntries: any = performance.getEntriesByType("navigation");
 
@@ -19,6 +25,8 @@ export default function handlePerformanceIndx() {
             const completeLoadTime: number = loadEventStart - fetchStart; // 完整的加载耗时
 
             const logData = {
+                type: "pagePerformance",
+                URL: window.location.href,
                 DNSTime,
                 connectTime,
                 ttfbTime,
@@ -30,6 +38,16 @@ export default function handlePerformanceIndx() {
             };
 
             console.log("performanceIndex", logData);
-        }, 0);
-    });
+        }, 3000);
+    }
+}
+
+export default function init() {
+    if (document.readyState === "complete") {
+        if (compatibility.performance) handleNavigationTiming();
+    } else {
+        window.addEventListener("load", () => {
+            if (compatibility.performance) handleNavigationTiming();
+        });
+    }
 }
