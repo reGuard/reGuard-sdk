@@ -12,20 +12,18 @@ import performanceIndex from "../utils/performanceIndex/performanceIndex";
 export default class Tracker {
     public data: Optins;
     MouseEventList: string[] = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
+
     constructor(options: Optins) {
         this.data = Object.assign(this.initDef(), options);
         this.installTracker();
     }
+
     // 初始化函数
     private initDef(): DefaultOptons {
         window.history["pushState"] = createHistoryEvent("pushState");
         window.history["replaceState"] = createHistoryEvent("replaceState");
         return <DefaultOptons>{
             sdkVersion: TrackerConfig.version,
-            historyTracker: false,
-            hashTracker: false,
-            domTracker: false,
-            jsError: false,
         };
     }
 
@@ -121,7 +119,7 @@ export default class Tracker {
             injectHandleResourceError();
         }
         //白屏监听
-        if (this.data.ScreenTracker) {
+        if (this.data.screenTracker) {
             blankScreen();
         }
         //
