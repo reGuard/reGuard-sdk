@@ -60,6 +60,29 @@ function handleDOMContentLoaded() {
     });
 }
 
+const options = JSON.parse(localStorage.getItem('info'));
+// 兼容性判断
+const compatibility$1 = {
+    canUseSendBeacon: !!navigator.sendBeacon,
+};
+function reportTracker(url, params) {
+    params = Object.assign(params, { uuid: options.uuid, sdkversion: options.sdkVersion }, { reportTime: new Date().getTime() });
+    console.log(params);
+    if (compatibility$1.canUseSendBeacon && params) {
+        let headers = {
+            type: "application/x-www-form-urlencoded",
+        };
+        //封装blob
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon(url, blob);
+    }
+    else {
+        // 使用img标签上报
+        const img = new Image();
+        img.src = `${url}?data=${encodeURIComponent(JSON.stringify(params))}`;
+    }
+}
+
 const MouseEventList = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
 function handleTargetDOM () {
     MouseEventList.forEach((ev) => {
@@ -67,10 +90,12 @@ function handleTargetDOM () {
             const target = e.target;
             const targetKey = target.getAttribute("target-key");
             if (targetKey) {
-                console.log({
+                let info = {
                     event: ev,
                     target: targetKey,
-                }, "监听到了");
+                };
+                console.log(info);
+                reportTracker('/Tarcker', info);
             }
         });
     });
@@ -131,27 +156,6 @@ function injectHandleResourceError() {
         /* true */
         return;
     }, true);
-}
-
-// 兼容性判断
-const compatibility$1 = {
-    canUseSendBeacon: !!navigator.sendBeacon,
-};
-function reportTracker(url, params) {
-    params = Object.assign(params, { reportTime: new Date().getTime() });
-    if (compatibility$1.canUseSendBeacon && params) {
-        let headers = {
-            type: "application/x-www-form-urlencoded",
-        };
-        //封装blob
-        let blob = new Blob([JSON.stringify(params)], headers);
-        navigator.sendBeacon(url, blob);
-    }
-    else {
-        // 使用img标签上报
-        const img = new Image();
-        img.src = `${url}?data=${encodeURIComponent(JSON.stringify(params))}`;
-    }
 }
 
 //接口异常采集
@@ -342,6 +346,7 @@ function init() {
 class Tracker {
     constructor(options) {
         this.options = Object.assign(this.initDef(), options);
+        localStorage.setItem('info', JSON.stringify(this.options));
         this.installTracker();
     }
     // 初始化函数
@@ -351,19 +356,6 @@ class Tracker {
         return {
             sdkVersion: TrackerConfig.version,
         };
-    }
-    //设置用户id
-    setUserId(uuid) {
-        this.options.uuid = uuid;
-    }
-    //上报请求
-    reportTracker(data) {
-        const params = Object.assign(this.options, data);
-        reportTracker(this.options.requestUrl, params);
-    }
-    //手动上报
-    sendReport(data) {
-        this.reportTracker(data);
     }
     installTracker() {
         //history模式监控pv

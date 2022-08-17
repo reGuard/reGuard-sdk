@@ -1,13 +1,14 @@
-import { ReportData } from "../type/index";
+import {Optins} from '../type/IOptions'
+const options:Optins = JSON.parse(localStorage.getItem('info')!)
 
 // 兼容性判断
 const compatibility = {
     canUseSendBeacon: !!navigator.sendBeacon,
 };
 
-export default function reportTracker<T>(url: string, params: T) {
-    params = Object.assign(params, { reportTime: new Date().getTime() });
-
+export default function reportTracker<T>(url: string, params: any) {
+     params = Object.assign(params,{uuid:options.uuid,sdkversion:options.sdkVersion},{ reportTime: new Date().getTime() });
+     console.log(params)
     if (compatibility.canUseSendBeacon && params) {
         let headers = {
             type: "application/x-www-form-urlencoded",

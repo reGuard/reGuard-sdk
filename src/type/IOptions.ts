@@ -32,3 +32,12 @@ export interface DefaultOptons {
 export interface Optins extends Partial<DefaultOptons> {
     requestUrl: string; // 使该属性变为必选属性
 }
+
+
+//上报请求信息
+export interface IrequestData{
+    uuid: string,
+    sdkversion:string,
+    reportTime?:number
+
+}

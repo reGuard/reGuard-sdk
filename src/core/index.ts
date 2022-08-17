@@ -9,16 +9,16 @@ import resourceErrorTracker from "../lib/handleError/resourceError";
 import requestTracker from "../lib/handleRequest/handleRequest";
 import blankScreen from "../lib/pageRender/blankScreen";
 import performanceIndex from "../lib/performanceIndex/navigationTiming";
-import reportTracker from "../utils/publicReport";
+
 
 export default class Tracker {
     public options: Optins;
 
     constructor(options: Optins) {
         this.options = Object.assign(this.initDef(), options);
+        localStorage.setItem('info',JSON.stringify(this.options))
         this.installTracker();
     }
-
     // 初始化函数
     private initDef(): DefaultOptons {
         window.history["pushState"] = createHistoryEvent("pushState");
@@ -29,21 +29,6 @@ export default class Tracker {
         };
     }
 
-    //设置用户id
-    public setUserId<T extends DefaultOptons["uuid"]>(uuid: T) {
-        this.options.uuid = uuid;
-    }
-
-    //上报请求
-    private reportTracker<T>(data: T) {
-        const params = Object.assign(this.options, data);
-        reportTracker(this.options.requestUrl, params);
-    }
-
-    //手动上报
-    public sendReport<T>(data: T) {
-        this.reportTracker(data);
-    }
 
     private installTracker() {
         //history模式监控pv
