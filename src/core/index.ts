@@ -34,7 +34,7 @@ export default class Tracker {
         this.options.uuid = uuid;
     }
 
-    //上报请求
+    //上报
     private reportTracker<T>(data: T) {
         const params = Object.assign(this.options, data);
         reportTracker(this.options.requestUrl, params);
