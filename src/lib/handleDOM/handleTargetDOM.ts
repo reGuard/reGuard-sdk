@@ -1,3 +1,4 @@
+import reportTracker from '../../utils/publicReport'
 const MouseEventList: string[] = ["click", "dblclick", "contextmenu", "mousedown", "mouseup", "mouseenter", "mouseout", "mouseover"];
 
 export default function () {
@@ -6,13 +7,13 @@ export default function () {
             const target = e.target as HTMLElement;
             const targetKey = target.getAttribute("target-key");
             if (targetKey) {
-                console.log(
-                    {
+                    let info = {
                         event: ev,
                         target: targetKey,
-                    },
-                    "监听到了"
-                );
+                    }
+                    console.log(info)
+                    reportTracker('/Tarcker',info)
+                
             }
         });
     });

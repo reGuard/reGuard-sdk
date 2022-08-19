@@ -16,7 +16,7 @@ export default class Tracker {
 
     constructor(options: Optins) {
         this.options = Object.assign(this.initDef(), options);
-        localStorage.setItem("info", JSON.stringify(this.options));
+        localStorage.setItem("options", JSON.stringify(this.options));
         this.installTracker();
     }
     // 初始化函数
