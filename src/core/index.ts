@@ -37,12 +37,12 @@ export default class Tracker {
     //上报
     private reportTracker<T>(data: T) {
         const params = Object.assign(this.options, data);
-        reportTracker(this.options.requestUrl, params);
+        reportTracker(params, this.options.requestUrl);
     }
 
     //手动上报
-    public sendReport<T>(data: T) {
-        this.reportTracker(data);
+    public sendReport<T>(data: T, url: string | undefined) {
+        reportTracker(data, url);
     }
 
     private installTracker() {

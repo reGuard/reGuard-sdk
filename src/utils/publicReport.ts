@@ -6,7 +6,7 @@ const compatibility = {
     canUseSendBeacon: !!navigator.sendBeacon,
 };
 
-export default function reportTracker<T>(url: string, params: any) {
+export default function reportTracker<T>(params: any, url: string = options.requestUrl) {
     params = Object.assign(params, { uuid: options.uuid, sdkversion: options.sdkVersion }, { reportTime: new Date().getTime() });
     console.log(params);
     if (compatibility.canUseSendBeacon && params) {
