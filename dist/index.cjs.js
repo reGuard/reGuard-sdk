@@ -56,9 +56,33 @@ function FPTracker(FCP) {
     observer.observe({ type: "paint", buffered: true });
 }
 
+const options = JSON.parse(localStorage.getItem("options"));
+// 兼容性判断
+const compatibility$1 = {
+    canUseSendBeacon: !!navigator.sendBeacon,
+};
+function reportTracker(params, url = options.requestUrl) {
+    params = Object.assign(params, { uuid: options.uuid, sdkversion: options.sdkVersion }, { reportTime: new Date().getTime() });
+    console.log(params);
+    if (compatibility$1.canUseSendBeacon && params) {
+        let headers = {
+            type: "application/x-www-form-urlencoded",
+        };
+        //封装blob
+        let blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon(url, blob);
+    }
+    else {
+        // 使用img标签上报
+        const img = new Image();
+        img.src = `${url}?data=${encodeURIComponent(JSON.stringify(params))}`;
+    }
+}
+
 function handleDOMContentLoaded() {
-    document.addEventListener("DOMContentLoaded", function () {
-        console.log("DOMReady: True", new Date());
+    document.addEventListener("DOMContentLoaded", function (e) {
+        console.log(e.timeStamp);
+        reportTracker({ DOMReady: e.timeStamp }, 'http://43.142.180.91:3000/tracker');
     });
 }
 
@@ -69,10 +93,11 @@ function handleTargetDOM () {
             const target = e.target;
             const targetKey = target.getAttribute("target-key");
             if (targetKey) {
-                console.log({
+                let info = {
                     event: ev,
                     target: targetKey,
-                }, "监听到了");
+                };
+                console.log(info);
             }
         });
     });
@@ -135,27 +160,6 @@ function injectHandleResourceError() {
     }, true);
 }
 
-// 兼容性判断
-const compatibility$1 = {
-    canUseSendBeacon: !!navigator.sendBeacon,
-};
-function reportTracker(url, params) {
-    params = Object.assign(params, { reportTime: new Date().getTime() });
-    if (compatibility$1.canUseSendBeacon && params) {
-        let headers = {
-            type: "application/x-www-form-urlencoded",
-        };
-        //封装blob
-        let blob = new Blob([JSON.stringify(params)], headers);
-        navigator.sendBeacon(url, blob);
-    }
-    else {
-        // 使用img标签上报
-        const img = new Image();
-        img.src = `${url}?data=${encodeURIComponent(JSON.stringify(params))}`;
-    }
-}
-
 //接口异常采集
 function requestCatch(type1, type2) {
     //开启fetch监控
@@ -191,7 +195,7 @@ function requestCatch(type1, type2) {
                     response: this.response ? JSON.stringify(this.response) : "",
                     params: body || "",
                 };
-                reportTracker("http://localhost:9000/tracker", requestInfo);
+                reportTracker(requestInfo, "http://localhost:9000/tracker");
             };
             this.addEventListener("load", handler(), false);
             this.addEventListener("error", handler(), false);
@@ -344,6 +348,7 @@ function init() {
 class Tracker {
     constructor(options) {
         this.options = Object.assign(this.initDef(), options);
+        localStorage.setItem("options", JSON.stringify(this.options));
         this.installTracker();
     }
     // 初始化函数
@@ -358,14 +363,14 @@ class Tracker {
     setUserId(uuid) {
         this.options.uuid = uuid;
     }
-    //上报请求
+    //上报
     reportTracker(data) {
         const params = Object.assign(this.options, data);
-        reportTracker(this.options.requestUrl, params);
+        reportTracker(params, this.options.requestUrl);
     }
     //手动上报
-    sendReport(data) {
-        this.reportTracker(data);
+    sendReport(data, url) {
+        reportTracker(data, url);
     }
     installTracker() {
         //history模式监控pv

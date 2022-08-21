@@ -32,6 +32,8 @@ function requestCatch<T extends keyof XMLHttpRequest>(type1: T, type2: T) {
                     let status = this.status;
                     let statusText = this.statusText;
                     let requestInfo = {
+                        
+                        name:'request', 
                         type: "xhr",
                         eventType: event.type,
                         pathName: logData.url,
@@ -40,7 +42,7 @@ function requestCatch<T extends keyof XMLHttpRequest>(type1: T, type2: T) {
                         response: this.response ? JSON.stringify(this.response) : "",
                         params: body || "",
                     };
-                    reportTracker("http://localhost:9000/tracker", requestInfo);
+                    reportTracker(requestInfo);
                 };
 
             this.addEventListener("load", handler("load"), false);
@@ -76,6 +78,7 @@ function fetchCatch() {
             method = args[1].method;
         }
         let fetchData = {
+            name:'request',
             method: method,
             pathName: url,
             status: 0,
@@ -89,6 +92,7 @@ function fetchCatch() {
             fetchData.type = "fetch";
             fetchData.duration = Date.now() - startTime;
             console.log(fetchData);
+            reportTracker(fetchData)
             return response;
         });
     };

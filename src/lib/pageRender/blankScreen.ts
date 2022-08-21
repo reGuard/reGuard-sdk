@@ -1,3 +1,4 @@
+import  reportTracker  from "../../utils/publicReport";
 function getSelector(element: Element) {
     var selector;
     if (element.id) {
@@ -37,7 +38,7 @@ export default function blankScreen() {
         if (emptyPoints >= 0) {
             let centerElements = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
             let reportData = {
-                kind: "stability",
+                name:'白屏',
                 type: "blank",
                 emptyPoints: "" + emptyPoints,
                 screen: window.screen.width + "x" + window.screen.height,
@@ -45,6 +46,7 @@ export default function blankScreen() {
                 selector: getSelector(centerElements[0]),
             };
             console.log("白屏", reportData);
+            reportTracker(reportData)
         }
     };
 }

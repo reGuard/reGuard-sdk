@@ -8,11 +8,11 @@ export default function () {
             const targetKey = target.getAttribute("target-key");
             if (targetKey) {
                     let info = {
+                        name:'targetDom',
                         event: ev,
                         target: targetKey,
                     }
-                    console.log(info)
-                    reportTracker('/Tarcker',info)
+                    reportTracker(info)
                 
             }
         });

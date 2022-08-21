@@ -1,9 +1,9 @@
+import  reportTracker  from "../../utils/publicReport";
 export default function injectHandleJsError() {
     window.addEventListener("error", function (event) {
         // 监听语法、引用等js错误
         const reportData = {
-            kind: "stability", // 稳定性指标
-            type: "error", // 异常大类
+            name:'JsError',
             errorType: "jsError", // 异常具体类型
             message: event.message, // 异常信息
             fileName: event.filename, // 异常文件
@@ -11,6 +11,7 @@ export default function injectHandleJsError() {
         };
 
         console.log("jsError", reportData);
+        reportTracker(reportData)
     });
 
     window.addEventListener("unhandledrejection", function (event) {
@@ -33,5 +34,6 @@ export default function injectHandleJsError() {
         }
 
         console.log("promiseError", reportData);
+        reportTracker(reportData)
     });
 }

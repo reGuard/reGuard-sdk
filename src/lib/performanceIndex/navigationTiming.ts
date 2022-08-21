@@ -1,4 +1,5 @@
 // 兼容性判断
+import  reportTracker  from "../../utils/publicReport";
 const compatibility = {
     performance: !!window.performance,
     getEntriesByType: !!(window.performance && performance.getEntriesByType),
@@ -25,7 +26,7 @@ function handleNavigationTiming() {
             const completeLoadTime: number = loadEventStart - fetchStart; // 完整的加载耗时
 
             const logData = {
-                type: "pagePerformance",
+                name: "pagePerformance",
                 URL: window.location.href,
                 DNSTime,
                 connectTime,
@@ -38,6 +39,7 @@ function handleNavigationTiming() {
             };
 
             console.log("performanceIndex", logData);
+            reportTracker(logData)
         }, 3000);
     }
 }

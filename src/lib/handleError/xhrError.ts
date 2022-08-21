@@ -1,4 +1,5 @@
 //接口异常采集
+import  reportTracker  from "../../utils/publicReport";
 export default function injectHandleResourceError() {
     let temp = {
         url: "",
@@ -27,7 +28,6 @@ export default function injectHandleResourceError() {
                 let duration = Date.now() - startTime;
                 console.log(this);
                 const reportData = {
-                    kind: "stability",
                     type: "xhr",
                     eventType: eventType, // 事件类型
                     path: temp.url, // 请求路径
@@ -38,6 +38,7 @@ export default function injectHandleResourceError() {
                     param: body || "",
                 };
                 console.log(reportData);
+                reportTracker(reportData)
             };
 
             // 监听load、error、abort事件
