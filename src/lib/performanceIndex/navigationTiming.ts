@@ -1,5 +1,5 @@
 // 兼容性判断
-import  reportTracker  from "../../utils/publicReport";
+import  reportTracker  from "../../utils/reportTracker";
 const compatibility = {
     performance: !!window.performance,
     getEntriesByType: !!(window.performance && performance.getEntriesByType),

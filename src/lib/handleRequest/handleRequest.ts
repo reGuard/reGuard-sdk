@@ -1,5 +1,5 @@
 //接口异常采集
-import reportTracker from "../../utils/publicReport";
+import reportTracker from "../../utils/reportTracker";
 
 function requestCatch<T extends keyof XMLHttpRequest>(type1: T, type2: T) {
     //开启fetch监控

@@ -9,7 +9,7 @@ import resourceErrorTracker from "../lib/handleError/resourceError";
 import requestTracker from "../lib/handleRequest/handleRequest";
 import blankScreen from "../lib/pageRender/blankScreen";
 import performanceIndex from "../lib/performanceIndex/navigationTiming";
-import reportTracker from "../utils/publicReport";
+import reportTracker from "../utils/reportTracker";
 
 export default class Tracker {
     public options: Optins;

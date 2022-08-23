@@ -1,5 +1,5 @@
 //接口异常采集
-import  reportTracker  from "../../utils/publicReport";
+import reportTracker from "../../utils/reportTracker";
 export default function injectHandleResourceError() {
     let temp = {
         url: "",
@@ -38,7 +38,7 @@ export default function injectHandleResourceError() {
                     param: body || "",
                 };
                 console.log(reportData);
-                reportTracker(reportData)
+                reportTracker(reportData);
             };
 
             // 监听load、error、abort事件

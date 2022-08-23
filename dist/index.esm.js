@@ -35,31 +35,13 @@ function captureEvents(mouseEventList, targetKey, data) {
     });
 }
 
-function FPTracker(FCP) {
-    const entryHandler = (list) => {
-        for (const entry of list.getEntries()) {
-            if (entry.name === "first-paint") {
-                observer.disconnect();
-                console.log("FPtime", entry.startTime);
-            }
-            if (FCP) {
-                if (entry.name === "first-contentful-paint") {
-                    observer.disconnect();
-                    console.log("FCPtime", entry.startTime);
-                }
-            }
-        }
-    };
-    const observer = new PerformanceObserver(entryHandler);
-    observer.observe({ type: "paint", buffered: true });
-}
-
-const options = JSON.parse(localStorage.getItem("options"));
 // 兼容性判断
 const compatibility$1 = {
     canUseSendBeacon: !!navigator.sendBeacon,
 };
-function reportTracker(params, url = options.requestUrl) {
+function reportTracker(params, url) {
+    const options = JSON.parse(localStorage.getItem("options"));
+    url = !!url ? url : options.requestUrl;
     params = Object.assign(params, { uuid: options.uuid, sdkversion: options.sdkVersion }, { reportTime: new Date().getTime() });
     console.log(params);
     if (compatibility$1.canUseSendBeacon && params) {
@@ -77,10 +59,38 @@ function reportTracker(params, url = options.requestUrl) {
     }
 }
 
+function FPTracker(FCP) {
+    const entryHandler = (list) => {
+        for (const entry of list.getEntries()) {
+            if (entry.name === "first-paint") {
+                observer.disconnect();
+                console.log("FPtime", entry.startTime);
+                let reportData = {
+                    name: "FP",
+                    FPtime: entry.startTime,
+                };
+                reportTracker(reportData);
+            }
+            if (FCP) {
+                if (entry.name === "first-contentful-paint") {
+                    observer.disconnect();
+                    console.log("FCPtime", entry.startTime);
+                }
+            }
+        }
+    };
+    const observer = new PerformanceObserver(entryHandler);
+    observer.observe({ type: "paint", buffered: true });
+}
+
 function handleDOMContentLoaded() {
     document.addEventListener("DOMContentLoaded", function (e) {
         console.log(e.timeStamp);
-        reportTracker({ DOMReady: e.timeStamp }, 'http://43.142.180.91:3000/tracker');
+        let info = {
+            name: "Domready",
+            DOMReady: e.timeStamp,
+        };
+        reportTracker(info, "http://43.142.180.91:3000/tracker");
     });
 }
 
@@ -92,10 +102,11 @@ function handleTargetDOM () {
             const targetKey = target.getAttribute("target-key");
             if (targetKey) {
                 let info = {
+                    name: "targetDom",
                     event: ev,
                     target: targetKey,
                 };
-                console.log(info);
+                reportTracker(info);
             }
         });
     });
@@ -105,14 +116,14 @@ function injectHandleJsError() {
     window.addEventListener("error", function (event) {
         // 监听语法、引用等js错误
         const reportData = {
-            kind: "stability",
-            type: "error",
+            name: 'JsError',
             errorType: "jsError",
             message: event.message,
             fileName: event.filename,
             position: (event.lineno || 0) + ":" + (event.colno || 0), // 异常位置
         };
         console.log("jsError", reportData);
+        reportTracker(reportData);
     });
     window.addEventListener("unhandledrejection", function (event) {
         // 监听未被catch的promise错误
@@ -133,6 +144,7 @@ function injectHandleJsError() {
             reportData.message = event.reason;
         }
         console.log("promiseError", reportData);
+        reportTracker(reportData);
     });
 }
 
@@ -145,13 +157,14 @@ function injectHandleResourceError() {
         const isElementTarget = target instanceof HTMLScriptElement || target instanceof HTMLLinkElement || target instanceof HTMLImageElement;
         if (isElementTarget) {
             const reportData = {
-                kind: "stability",
+                name: "resourceError",
                 type: "error",
                 errorType: "resourceError",
                 message: `加载${target.tagName}资源失败`,
                 url: event.target.src || event.target.href,
             };
             console.log(reportData);
+            reportTracker(reportData);
         }
         /* true */
         return;
@@ -185,6 +198,7 @@ function requestCatch(type1, type2) {
                 let status = this.status;
                 let statusText = this.statusText;
                 let requestInfo = {
+                    name: 'request',
                     type: "xhr",
                     eventType: event.type,
                     pathName: logData.url,
@@ -193,7 +207,7 @@ function requestCatch(type1, type2) {
                     response: this.response ? JSON.stringify(this.response) : "",
                     params: body || "",
                 };
-                reportTracker(requestInfo, "http://localhost:9000/tracker");
+                reportTracker(requestInfo);
             };
             this.addEventListener("load", handler(), false);
             this.addEventListener("error", handler(), false);
@@ -226,6 +240,7 @@ function fetchCatch() {
             method = args[1].method;
         }
         let fetchData = {
+            name: 'request',
             method: method,
             pathName: url,
             status: 0,
@@ -239,6 +254,7 @@ function fetchCatch() {
             fetchData.type = "fetch";
             fetchData.duration = Date.now() - startTime;
             console.log(fetchData);
+            reportTracker(fetchData);
             return response;
         });
     };
@@ -284,7 +300,7 @@ function blankScreen() {
         if (emptyPoints >= 0) {
             let centerElements = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
             let reportData = {
-                kind: "stability",
+                name: '白屏',
                 type: "blank",
                 emptyPoints: "" + emptyPoints,
                 screen: window.screen.width + "x" + window.screen.height,
@@ -292,6 +308,7 @@ function blankScreen() {
                 selector: getSelector(centerElements[0]),
             };
             console.log("白屏", reportData);
+            reportTracker(reportData);
         }
     };
 }
@@ -315,7 +332,7 @@ function handleNavigationTiming() {
             const timeToInteractive = domInteractive - fetchStart; // 首次可交互耗时
             const completeLoadTime = loadEventStart - fetchStart; // 完整的加载耗时
             const logData = {
-                type: "pagePerformance",
+                name: "pagePerformance",
                 URL: window.location.href,
                 DNSTime,
                 connectTime,
@@ -327,6 +344,7 @@ function handleNavigationTiming() {
                 completeLoadTime,
             };
             console.log("performanceIndex", logData);
+            reportTracker(logData);
         }, 3000);
     }
 }

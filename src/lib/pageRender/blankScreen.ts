@@ -1,4 +1,4 @@
-import  reportTracker  from "../../utils/publicReport";
+import  reportTracker  from "../../utils/reportTracker";
 function getSelector(element: Element) {
     var selector;
     if (element.id) {

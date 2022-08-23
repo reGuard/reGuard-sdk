@@ -1,4 +1,4 @@
-import  reportTracker  from "../../utils/publicReport";
+import  reportTracker  from "../../utils/reportTracker";
 export default function injectHandleJsError() {
     window.addEventListener("error", function (event) {
         // 监听语法、引用等js错误
