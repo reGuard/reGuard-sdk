@@ -1,5 +1,5 @@
+import reportTracker from "../../utils/reportTracker";
 // 兼容性判断
-import  reportTracker  from "../../utils/reportTracker";
 const compatibility = {
     performance: !!window.performance,
     getEntriesByType: !!(window.performance && performance.getEntriesByType),
@@ -24,6 +24,10 @@ function handleNavigationTiming() {
             const resourceTime: number = domComplete - domContentLoadedEventEnd; // 资源加载耗时
             const timeToInteractive: number = domInteractive - fetchStart; // 首次可交互耗时
             const completeLoadTime: number = loadEventStart - fetchStart; // 完整的加载耗时
+            const FP: number = responseEnd - fetchStart; // 白屏时间
+
+            const memory: any = (performance as any).memory;
+            const memoryUsage: string = ((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100).toFixed(2) + "%"; // js内存使用占比
 
             const logData = {
                 name: "pagePerformance",
@@ -36,10 +40,12 @@ function handleNavigationTiming() {
                 domContentLoadedTime,
                 timeToInteractive,
                 completeLoadTime,
+                FP,
+                memoryUsage,
             };
 
             console.log("performanceIndex", logData);
-            reportTracker(logData)
+            reportTracker(logData);
         }, 3000);
     }
 }
