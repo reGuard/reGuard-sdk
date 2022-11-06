@@ -12,32 +12,30 @@
  * @extra 用户自定义字段(对象)
  */
 export interface DefaultOptons {
-    uuid: string | undefined;
-    requestUrl: string | undefined;
-    sdkVersion: string | number;
-    historyTracker: boolean;
-    hashTracker: boolean;
-    DOMTracker: boolean;
-    jsError: boolean;
-    requestTracker: boolean;
-    screenTracker: boolean;
-    resourceError: boolean;
-    performanceIndex: boolean;
-    FPTracker: boolean;
-    FCPTracker: boolean;
-    extra: Record<string, any> | undefined;
+  uuid: string | undefined;
+  requestUrl: string | undefined;
+  sdkVersion: string | number;
+  historyTracker: boolean;
+  hashTracker: boolean;
+  DOMTracker: boolean;
+  jsError: boolean;
+  requestTracker: boolean;
+  screenTracker: boolean;
+  resourceError: boolean;
+  performanceIndex: boolean;
+  FPTracker: boolean;
+  FCPTracker: boolean;
+  extra: Record<string, any> | undefined;
 }
 
 // Partial代表将属性变为可选属性
 export interface Optins extends Partial<DefaultOptons> {
-    requestUrl: string; // 使该属性变为必选属性
+  requestUrl: string; // 使该属性变为必选属性
 }
 
-
 //上报请求信息
-export interface IrequestData{
-    uuid: string,
-    sdkversion:string,
-    reportTime?:number
-
+export interface IrequestData {
+  uuid: string;
+  sdkversion: string;
+  reportTime?: number;
 }
