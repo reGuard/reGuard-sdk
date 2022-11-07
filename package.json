@@ -20,6 +20,7 @@
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint --fix ./src",
+    "test": "rollup -c && scp ./dist/index.js ./demo/index.js && cd demo && serve",
     "prepare": "husky install"
   },
   "keywords": [],
