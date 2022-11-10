@@ -23,7 +23,7 @@ npm install --save reguard-sdk
 
 ```
 
-import { MonitorJS } from "reguard-sdk";
+import { Tracker } from "reguard-sdk";
 
 ```
 </details>
