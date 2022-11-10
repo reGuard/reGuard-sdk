@@ -14,7 +14,7 @@ export default [
         format: 'cjs',
       },
       {
-        file: path.resolve(__dirname, './dist/index.js'),
+        file: path.resolve(__dirname, './dist/index.min.js'),
         format: 'umd',
         name: 'Tracker',
       },
@@ -25,7 +25,7 @@ export default [
     input: './src/core/index.ts',
     output: [
       {
-        file: path.resolve(__dirname, './dist/index.d.js'),
+        file: path.resolve(__dirname, './dist/index.d.ts'),
         format: 'es',
       },
     ],
