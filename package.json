@@ -1,4 +1,19 @@
 {
+  "name": "reguard-sdk",
+  "version": "1.0.1",
+  "main": "./dist/index.min.js",
+  "module": "./dist/index.esm.js",
+  "files": ["./dist"],
+  "scripts": {
+    "build": "rm -rf ./dist && rollup -c",
+    "lint": "eslint --fix ./src",
+    "test": "rollup -c && scp ./dist/index.js ./demo/index.js && cd demo && serve",
+    "prepare": "husky install"
+  },
+  "keywords": ["web monitor", "reguard", "monitor", "SDK", "web Tracker"],
+  "author": "reGuard",
+  "license": "MIT",
+  "description": "A SDK for web error and performance monitor。web前端错误及性能监控SDK，JS执行错误、请求异常、行为监控等",
   "devDependencies": {
     "@commitlint/cli": "^17.2.0",
     "@commitlint/config-conventional": "^17.2.0",
@@ -13,18 +28,5 @@
     "rollup-plugin-dts": "^4.2.2",
     "rollup-plugin-typescript2": "^0.32.1",
     "typescript": "^4.7.4"
-  },
-  "name": "sdk",
-  "version": "1.0.0",
-  "main": "rollup.config.js",
-  "scripts": {
-    "build": "rollup -c",
-    "lint": "eslint --fix ./src",
-    "test": "rollup -c && scp ./dist/index.js ./demo/index.js && cd demo && serve",
-    "prepare": "husky install"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  }
 }
