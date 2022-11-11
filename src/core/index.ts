@@ -29,17 +29,6 @@ export default class Tracker {
     };
   }
 
-  //设置用户id
-  public setUserId<T extends DefaultOptons['uuid']>(uuid: T) {
-    this.options.uuid = uuid;
-  }
-
-  //上报
-  private reportTracker<T>(data: T) {
-    const params = Object.assign(this.options, data);
-    reportTracker(params, this.options.requestUrl);
-  }
-
   //手动上报
   public sendReport<T>(data: T, url: string | undefined) {
     reportTracker(data, url);
@@ -55,7 +44,7 @@ export default class Tracker {
     if (this.options.hashTracker) {
       captureEvents(['hashchange'], 'hash-pv');
     }
-    //Fp监控
+    //Fp监控 & FCP监控
     if (this.options.FPTracker) {
       FPTracker(this.options.FCPTracker);
     }

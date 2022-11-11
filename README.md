@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./res/logo.png">
+    <img src="https://s1.ax1x.com/2022/11/11/z9OhCR.png">
     <p> a flexible front-end monitor SDK </p>
     
 </div>

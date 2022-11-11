@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="./res/logo.png">
+    <img src="https://s1.ax1x.com/2022/11/11/z9OhCR.png">
     <p> 轻量级无侵入式的前端埋点监控SDK </p>
     
 </div>

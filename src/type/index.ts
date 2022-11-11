@@ -2,7 +2,7 @@ export { DefaultOptons, Optins } from './IOptions';
 export { ReportData } from './IReportData';
 
 export enum TrackerConfig {
-  version = '1.0.0',
+  version = '1.0.1',
 }
 
 // 用户行为信息
