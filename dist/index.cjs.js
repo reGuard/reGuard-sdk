@@ -137,7 +137,7 @@ function handleDOMContentLoaded() {
             name: 'Domready',
             DOMReady: e.timeStamp,
         };
-        reportTracker(info, 'http://43.142.180.91:3000/tracker');
+        reportTracker(info);
     });
 }
 
@@ -439,15 +439,6 @@ class Tracker {
         return {
             sdkVersion: TrackerConfig.version,
         };
-    }
-    //设置用户id
-    setUserId(uuid) {
-        this.options.uuid = uuid;
-    }
-    //上报
-    reportTracker(data) {
-        const params = Object.assign(this.options, data);
-        reportTracker(params, this.options.requestUrl);
     }
     //手动上报
     sendReport(data, url) {
